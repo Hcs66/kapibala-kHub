@@ -16,3 +16,23 @@
 
 - 加上一句话描述Client销售工作台/管理端的功能（`5. V1 交付范围`中的 `5.1 包含`）
 - 每个功能再继续展开用一句话说明
+
+
+继续完善kHub_plan_v1(docs/v1/kHub_plan_v1.md)：
+
+- 适当connector的设计说明
+
+---
+
+继续完善kHub_plan_v1(docs/v1/kHub_plan_v1.md)：
+
+- 加入客户画像模块(可以放在V2)：
+ - 支持Ai客户画像推断
+ - 支持根据对话自动更新客户画像
+ - 支持根据客户画像推荐自有的服务/产品
+
+ ---
+
+ 继续完善kHub_plan_v1(docs/v1/kHub_plan_v1.md)：
+
+ - 补充关于Tuwunel的实现，若使用其作为 matrix homeserver，其存储引擎为rocksdb如何与Im core的PostgreSQL同步
