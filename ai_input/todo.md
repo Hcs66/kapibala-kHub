@@ -1,4 +1,7 @@
-继续调整：
+继续优化plan_v2:
 
-- 再次仔细阅读需求文档(ai_input/resources/requirment.md)和技术报告（docs/v1/kHub_tdr_v1.md）
-- IM Core依然基于Matrix作为底座，这样可以使用其成熟的生态和完整的sdk支持，已有connector通过adapter实现注册、适配到matrix
+## 说明
+- 将引用plan_v1的内容直接写到v2，当做完整的文档处理
+- 删除`2.2 需要技术团队确认`
+- 将`5. 数据模型`提取出来一个当独的文档
+- 重新组织内容，按照feedback(ai_input/resources/kHub_feedback-2026-04-25.md)中的`1. 我们要实现的核心功能`来呈现，内容结构：需求→方案→说明

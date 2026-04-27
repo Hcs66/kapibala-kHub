@@ -89,3 +89,25 @@
 Telegram桥接和WhatsApp的不同账号的桥接团队其它team已经完善，也就是Connector已经完成了，我只需完成connector与im core之间的adapter既可以，调整相关内容，删减不必要的规划和分析
 
 ---
+继续调整：
+
+- 再次仔细阅读需求文档(ai_input/resources/requirment.md)和技术报告（docs/v1/kHub_tdr_v1.md）
+- IM Core依然基于Matrix作为底座，这样可以使用其成熟的生态和完整的sdk支持，已有connector通过adapter实现注册、适配到matrix
+
+---
+仔细阅读cto给的反馈文档（ai_input/resources/kHub_feedback-2026-04-25.md），对照plan_v1（docs/v1/kHub_plan_v1.md），详细分析异同点，需要调整的地方，先做计划再等我反馈做具体修改
+---
+
+参考技术评估报告（docs/v1/kHub_tdr_v1.md）和需求文档（ai_input/resources/requirment.md）：
+
+重做底座评估（Matrix vs 自建 Core）
+- 把 §1.1-§1.6 六条需求显式补进需求文档
+- 以可见性开关、跨会话搜索、训练导出、Adapter 工作量、多消费方统一接口为权重维度，重新对比两条路线
+- 如果结论是自建 Core，回到 TDR §5-§10 的设计（反馈说 90% 可复用）
+---
+认可方案，基于推荐方案写一版plan_v2：
+
+- 在文档开头加入一个section，列出v2中仍然需要对齐的事项
+- 加入一个seciton，精简总结：`Matrix 路线 vs 自建 Core 路线` 的内容，由于结论是自建Core，简要说明即可，重点时说明自建时哪些可以参考matrix方案
+
+---
