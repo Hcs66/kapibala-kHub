@@ -1,4 +1,22 @@
-# kHub V2 数据模型
+# kHub V1.2 数据模型
+
+---
+
+## 目录
+
+- [1. 文档信息](#1-文档信息)
+- [2. 设计原则](#2-设计原则)
+- [3. 数据架构概览](#3-数据架构概览)
+- [4. kHub 新建表（khub_ 前缀）](#4-khub-新建表khub_-前缀)
+  - [4.1 khub_raw_events（原始事件存档）](#41-khub_raw_events原始事件存档)
+  - [4.2 khub_accounts（账号管理）](#42-khub_accounts账号管理)
+  - [4.3 khub_visibility_policies（可见性策略）](#43-khub_visibility_policies可见性策略)
+  - [4.4 khub_visibility_audit_log（可见性审计日志）](#44-khub_visibility_audit_log可见性审计日志)
+- [5. Tracy message_raw 表增强字段（D-01 方案 C）](#5-tracy-message_raw-表增强字段d-01-方案-c)
+- [6. 表职责总览](#6-表职责总览)
+- [7. 命名与隔离规则](#7-命名与隔离规则)
+- [8. ID 命名规范](#8-id-命名规范)
+- [9. 数据生命周期](#9-数据生命周期)
 
 ---
 
@@ -6,533 +24,302 @@
 
 | 项目 | 内容 |
 |------|------|
-| 文档标题 | kHub V2 数据模型 |
-| 版本 | v2.0 |
-| 日期 | 2026-04-27 |
-| 状态 | 初稿 |
-| 适用范围 | kHub V2 自建 IM Core 方案 |
-| 说明 | 本文独立收敛 V2 所有核心数据模型、分区策略、消息序号设计和数据生命周期策略 |
+| 文档标题 | kHub V1.2 数据模型 |
+| 版本 | v1.2 |
+| 日期 | 2026-04-29 |
+| 状态 | 修订稿 |
+| 适用范围 | kHub V1.2（IM 平台壳层 + 销售工作台） |
+| 说明 | 本文收敛 V1.2 所有数据表定义。kHub 不自建完整消息表，基于 Tracy message_raw 增强 + kHub 自有表（khub_ 前缀） |
 
 ---
 
 ## 2. 设计原则
 
-1. **统一存储**：消息原文、译文、分析结果、原始事件、匿名映射、导出任务统一落在 PostgreSQL 主存储中，避免双数据源 join。
-2. **三轨文本**：`messages` 必须同时保留 `raw_text`、`display_text`、`translated_text`，分别服务审计、展示、翻译与训练导出。
-3. **会话内严格有序**：每个会话维护单调递增的 `conversation_seq`，作为消息排序、重传、同步和分页的顺序权威。
-4. **冷热分层**：消息与原始事件从第一天起保留，但按时间进入 Hot / Warm / Cold 层，控制存储成本。
-5. **服务端可见性控制**：客户身份字段授权、撤销、过期、审计必须在服务端持久化并可追责。
-6. **可训练资产沉淀**：导出链路、术语表、翻译审计都必须结构化落库，便于后续模型微调与平行语料生产。
+1. **共享 PostgreSQL 实例**：kHub 与 Tracy 共享同一个 PostgreSQL 实例，通过表名前缀隔离。
+2. **kHub 不直读 Tracy 业务表**：所有 Tracy 数据通过 HTTP API 获取，唯一例外是 D-01 方案 C 的字段级共享。
+3. **khub_ 前缀隔离**：kHub 新建表统一使用 `khub_` 前缀，与 Tracy 表物理隔离。
+4. **conversation_seq 由 Tracy 分配**：kHub 不在本地生成序号，通过 `POST /ingest/message_raw` 由 Tracy 负责分配。
+5. **服务端可见性控制**：可见性策略和审计日志作为一等实体建模，支撑 ViewProjector 投影。
+6. **凭据不存明文**：账号凭据通过引用标识存储，明文存放在 OS keychain 或加密文件中。
 
 ---
 
-## 3. 核心表 DDL
+## 3. 数据架构概览
 
-以下 15 张表覆盖 V2 的完整数据模型：10 张统一中台核心表、3 张 V2 新增表，以及 2 张术语表。
+```
+┌─────────────────────────────────────────────────────────────┐
+│                  共享 PostgreSQL 实例                         │
+│                                                             │
+│  ┌─────────────────────────────────────────────────────┐    │
+│  │  Tracy 已有表（不动）                                 │    │
+│  │  message_raw · translation_records · analysis_results │    │
+│  │  leads · profiles · ...                              │    │
+│  └─────────────────────────────────────────────────────┘    │
+│                                                             │
+│  ┌─────────────────────────────────────────────────────┐    │
+│  │  Tracy message_raw 增强字段（D-01 方案 C）            │    │
+│  │  + conversation_seq · platform_msg_id · status ...   │    │
+│  └─────────────────────────────────────────────────────┘    │
+│                                                             │
+│  ┌─────────────────────────────────────────────────────┐    │
+│  │  kHub 新建表（khub_ 前缀）                            │    │
+│  │  khub_raw_events · khub_accounts                     │    │
+│  │  khub_visibility_policies · khub_visibility_audit_log │    │
+│  └─────────────────────────────────────────────────────┘    │
+└─────────────────────────────────────────────────────────────┘
+```
 
-### 3.1 `accounts`（受控账号表）
+---
 
-存放我们控制的 IM 账号信息。
+## 4. kHub 新建表（khub_ 前缀）
+
+### 4.1 khub_raw_events（原始事件存档）
+
+kHub 自己的原始事件缓冲表，记录所有入站和出站事件的原始数据。
 
 ```sql
-CREATE TABLE accounts (
-  id              UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
-  platform        VARCHAR(20) NOT NULL,  -- 'telegram' | 'whatsapp' | 'line'
-  platform_id     VARCHAR(100) NOT NULL,  -- 平台侧账号标识
-  display_name    VARCHAR(100),
-  avatar_url      TEXT,
-  status          VARCHAR(20) DEFAULT 'active',  -- 'active' | 'suspended' | 'archived'
-  credentials     JSONB,       -- 加密后的平台凭据（token、session data）
-  config          JSONB       DEFAULT '{}',  -- 账号级配置（翻译开关、自动回复）
-  last_sync_at    TIMESTAMPTZ,
-  created_at      TIMESTAMPTZ DEFAULT now(),
-  updated_at      TIMESTAMPTZ DEFAULT now()
+CREATE TABLE khub_raw_events (
+  id                  UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+  event_id            VARCHAR(100) NOT NULL,     -- InboundMessageEvent.eventId
+  platform            VARCHAR(20) NOT NULL,      -- 'telegram' | 'whatsapp'
+  account_id          UUID        NOT NULL REFERENCES khub_accounts(id),
+  platform_msg_id     VARCHAR(200) NOT NULL,     -- 平台原始消息 ID
+  platform_chat_id    VARCHAR(200) NOT NULL,     -- 平台原始聊天 ID
+  direction           VARCHAR(10) NOT NULL DEFAULT 'inbound', -- 'inbound' | 'outbound'
+  message_type        VARCHAR(20) NOT NULL,      -- 'text' | 'image' | 'system'
+  content             TEXT,                      -- 消息文本内容
+  media_url           TEXT,                      -- 媒体文件 MinIO 路径
+  sender_platform_user_id VARCHAR(200),          -- 发送者平台用户 ID
+  raw_payload         JSONB,                     -- 平台原始数据完整保留
+  tracy_message_id    UUID,                      -- Tracy ingest 返回的 message_raw id
+  conversation_seq    BIGINT,                    -- Tracy 分配后回填
+  status              VARCHAR(20) DEFAULT 'pending',
+                      -- 'pending' | 'ingested' | 'sent' | 'failed'
+  failure_code        VARCHAR(50),               -- 发送失败错误码
+  failure_message     TEXT,                      -- 发送失败错误信息
+  status_updated_at_ms BIGINT,                   -- 状态最后更新时间
+  created_at          TIMESTAMPTZ DEFAULT now()
 );
 
-CREATE UNIQUE INDEX idx_accounts_platform_id ON accounts(platform, platform_id);
-CREATE INDEX idx_accounts_status ON accounts(status);
+-- 去重索引：同一平台 + 同一消息 ID + 同一账号 = 唯一
+CREATE UNIQUE INDEX idx_khub_raw_events_platform_msg
+  ON khub_raw_events(platform, platform_msg_id, account_id);
+
+-- 时间查询
+CREATE INDEX idx_khub_raw_events_created_at
+  ON khub_raw_events(created_at);
+
+-- 按 conversation_seq 查询
+CREATE INDEX idx_khub_raw_events_conversation_seq
+  ON khub_raw_events(conversation_seq);
+
+-- 按状态查询（用于重试等）
+CREATE INDEX idx_khub_raw_events_status
+  ON khub_raw_events(status)
+  WHERE status IN ('pending', 'failed');
 ```
 
-### 3.2 `external_identities`（外部联系人表）
+### 4.2 khub_accounts（账号管理）
 
-存放所有外部联系人（客户、潜在客户）。
+管理 kHub 控制的 IM 账号信息。
 
 ```sql
-CREATE TABLE external_identities (
-  id              UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
-  platform        VARCHAR(20) NOT NULL,
-  platform_uid    VARCHAR(100) NOT NULL,  -- 平台侧用户 ID
-  display_name    VARCHAR(200),
-  avatar_url      TEXT,
-  language        VARCHAR(10),  -- 检测到的首选语言（'pt-BR', 'th', 'zh-CN'）
-  timezone        VARCHAR(50),
-  metadata        JSONB       DEFAULT '{}',  -- 平台特有属性
-  first_seen_at   TIMESTAMPTZ,
-  last_active_at  TIMESTAMPTZ,
-  created_at      TIMESTAMPTZ DEFAULT now(),
-  updated_at      TIMESTAMPTZ DEFAULT now()
+CREATE TABLE khub_accounts (
+  id                     UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+  tenant_id              UUID        NOT NULL,
+  owner_user_id          UUID        NOT NULL,   -- 负责此账号的 sales 用户 ID
+  platform               VARCHAR(20) NOT NULL,   -- 'telegram' | 'whatsapp'
+  account_name           VARCHAR(100) NOT NULL,  -- 账号显示名
+  platform_account_id    VARCHAR(200) NOT NULL,  -- 平台侧账号标识
+  credentials_ref        VARCHAR(500),           -- 凭据引用（不存明文）
+                         -- 格式: "keychain:<platform>:<account_id>"
+                         -- 或:   "file:/path/to/encrypted.enc"
+  status                 VARCHAR(20) DEFAULT 'inactive',
+                         -- 'inactive' | 'connecting' | 'connected' | 'error' | 'banned'
+  last_connected_at_ms   BIGINT,                 -- 最后成功连接时间
+  last_error_code        VARCHAR(50),            -- 最近错误码
+  last_error_message     TEXT,                   -- 最近错误信息
+  metadata               JSONB       DEFAULT '{}',
+  created_at             TIMESTAMPTZ DEFAULT now(),
+  updated_at             TIMESTAMPTZ DEFAULT now()
 );
 
-CREATE UNIQUE INDEX idx_external_identities_platform_uid ON external_identities(platform, platform_uid);
-CREATE INDEX idx_external_identities_language ON external_identities(language);
-CREATE INDEX idx_external_identities_last_active ON external_identities(last_active_at);
+-- 平台 + 平台账号 ID 唯一
+CREATE UNIQUE INDEX idx_khub_accounts_platform_account
+  ON khub_accounts(platform, platform_account_id);
+
+-- 按 owner 查询
+CREATE INDEX idx_khub_accounts_owner
+  ON khub_accounts(owner_user_id);
+
+-- 按状态查询
+CREATE INDEX idx_khub_accounts_status
+  ON khub_accounts(status);
 ```
 
-### 3.3 `conversations`（统一会话表）
+### 4.3 khub_visibility_policies（可见性策略）
 
-统一会话的核心实体。一个会话可能关联多个平台的消息流。
+记录"谁在什么范围内可以看到哪些敏感字段"，用于服务端白名单投影。
 
 ```sql
-CREATE TABLE conversations (
-  id              UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
-  account_id      UUID        NOT NULL REFERENCES accounts(id),
-  type            VARCHAR(20) NOT NULL,  -- 'dm' | 'group' | 'channel'
-  title           VARCHAR(300),
-  platform        VARCHAR(20) NOT NULL,
-  platform_conv_id VARCHAR(200),  -- 平台侧会话/群组 ID
-  status          VARCHAR(20) DEFAULT 'active',
-  last_message_at TIMESTAMPTZ,
-  message_count   BIGINT      DEFAULT 0,
-  metadata        JSONB       DEFAULT '{}',
-  created_at      TIMESTAMPTZ DEFAULT now(),
-  updated_at      TIMESTAMPTZ DEFAULT now()
+CREATE TABLE khub_visibility_policies (
+  id                UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+  viewer_user_id    UUID        NOT NULL,   -- 被授权的 sales 用户 ID
+  scope_kind        VARCHAR(20) NOT NULL,   -- 'conversation' | 'customer' | 'team' | 'tenant'
+  scope_id          VARCHAR(200) NOT NULL,  -- scope_kind 对应的 ID
+  fields            JSONB       NOT NULL DEFAULT '[]',
+                    -- 授权的字段列表，如 ["real_name", "phone", "avatar_url"]
+  granted_by        UUID        NOT NULL,   -- 授予者（通常是 supervisor/boss）
+  granted_at_ms     BIGINT      NOT NULL,   -- 授予时间（毫秒时间戳）
+  expires_at_ms     BIGINT,                 -- NULL = 永不过期
+  revoked_at_ms     BIGINT,                 -- NULL = 未撤销
+  metadata          JSONB       DEFAULT '{}'
 );
 
-CREATE INDEX idx_conversations_account_status ON conversations(account_id, status);
-CREATE INDEX idx_conversations_platform_conv ON conversations(platform, platform_conv_id);
-CREATE INDEX idx_conversations_last_message ON conversations(last_message_at DESC);
+-- 按 viewer 查询有效策略
+CREATE INDEX idx_visibility_policies_viewer
+  ON khub_visibility_policies(viewer_user_id);
+
+-- 按 scope 查询
+CREATE INDEX idx_visibility_policies_scope
+  ON khub_visibility_policies(scope_kind, scope_id);
+
+-- 过期扫描索引（定时回收用）
+CREATE INDEX idx_visibility_policies_expires
+  ON khub_visibility_policies(expires_at_ms)
+  WHERE revoked_at_ms IS NULL AND expires_at_ms IS NOT NULL;
 ```
 
-### 3.4 `conversation_participants`（会话参与者表）
-
-多态关联，支持受控账号和外部联系人两种参与者类型。
-
-```sql
-CREATE TABLE conversation_participants (
-  id              UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
-  conversation_id UUID        NOT NULL REFERENCES conversations(id),
-  participant_type VARCHAR(20) NOT NULL,  -- 'account' | 'external'
-  participant_id  UUID        NOT NULL,  -- 指向 accounts.id 或 external_identities.id
-  role            VARCHAR(20) DEFAULT 'member',  -- 'owner' | 'admin' | 'member'
-  joined_at       TIMESTAMPTZ DEFAULT now(),
-  left_at         TIMESTAMPTZ,
-  nickname        VARCHAR(100),  -- 会话内别名
-  metadata        JSONB       DEFAULT '{}'
-);
-
-CREATE UNIQUE INDEX idx_conv_participants_unique
-  ON conversation_participants(conversation_id, participant_type, participant_id);
-CREATE INDEX idx_conv_participants_lookup
-  ON conversation_participants(participant_type, participant_id);
-```
-
-### 3.5 `messages`（统一消息表）
-
-整个中台最核心的表。三轨文本设计（`raw_text + display_text + translated_text`）是关键特性。
-
-```sql
-CREATE TABLE messages (
-  id              UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
-  conversation_id UUID        NOT NULL REFERENCES conversations(id),
-  conversation_seq BIGINT     NOT NULL,  -- 会话内单调递增序号
-  account_id      UUID        NOT NULL REFERENCES accounts(id),
-  sender_type     VARCHAR(20) NOT NULL,  -- 'account' | 'external' | 'system'
-  sender_id       UUID        NOT NULL,
-  platform        VARCHAR(20) NOT NULL,
-  platform_msg_id VARCHAR(200),  -- 平台原始消息 ID（去重）
-  message_type    VARCHAR(20) NOT NULL,  -- 'text' | 'image' | 'file' | 'sticker' | 'system'
-
-  raw_text        TEXT,        -- 平台原始文本，不做任何修改
-  display_text    TEXT,        -- 展示文本（经过格式化、emoji 标准化）
-  translated_text TEXT,        -- 翻译结果文本
-
-  source_lang     VARCHAR(10),  -- 源语言
-  target_lang     VARCHAR(10),  -- 目标翻译语言
-  translation_provider VARCHAR(20),  -- 'deepl' | 'azure' | 'gpt' | 'google'
-  translation_status VARCHAR(20) DEFAULT 'pending',  -- 'pending' | 'completed' | 'failed'
-
-  reply_to_seq    BIGINT,       -- 引用消息的 seq
-  metadata        JSONB        DEFAULT '{}',
-  sent_at         TIMESTAMPTZ  NOT NULL,  -- 平台侧发送时间
-  received_at     TIMESTAMPTZ  DEFAULT now(),  -- 我们收到的时间
-  edited_at       TIMESTAMPTZ,
-  deleted_at      TIMESTAMPTZ,  -- 软删除
-  created_at      TIMESTAMPTZ  DEFAULT now()
-) PARTITION BY RANGE (sent_at);
-
-CREATE UNIQUE INDEX idx_messages_conv_seq ON messages(conversation_id, conversation_seq);
-CREATE UNIQUE INDEX idx_messages_platform_msg ON messages(platform, platform_msg_id);
-CREATE INDEX idx_messages_conv_sent ON messages(conversation_id, sent_at DESC);
-CREATE INDEX idx_messages_sender ON messages(sender_type, sender_id);
-CREATE INDEX idx_messages_translation_pending ON messages(translation_status)
-  WHERE translation_status = 'pending';
-CREATE INDEX idx_messages_sent_at ON messages(sent_at DESC);
-```
-
-### 3.6 `attachments`（附件表）
-
-```sql
-CREATE TABLE attachments (
-  id              UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
-  message_id      UUID        NOT NULL REFERENCES messages(id),
-  type            VARCHAR(20) NOT NULL,  -- 'image' | 'video' | 'audio' | 'document' | 'sticker'
-  storage_key     TEXT        NOT NULL,  -- S3/R2 对象键
-  mime_type       VARCHAR(100),
-  file_size       BIGINT,
-  width           INTEGER,
-  height          INTEGER,
-  duration_sec    INTEGER,     -- 音视频时长
-  thumbnail_key   TEXT,        -- 缩略图对象键
-  metadata        JSONB       DEFAULT '{}',
-  created_at      TIMESTAMPTZ DEFAULT now()
-);
-
-CREATE INDEX idx_attachments_message ON attachments(message_id);
-CREATE INDEX idx_attachments_type ON attachments(type);
-```
-
-### 3.7 `raw_events`（平台原始事件表）
-
-从第一天开始保存全部平台原始事件数据。这张表的价值随时间增长，是不可妥协的数据资产。
-
-```sql
-CREATE TABLE raw_events (
-  id              UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
-  account_id      UUID        NOT NULL REFERENCES accounts(id),
-  platform        VARCHAR(20) NOT NULL,
-  event_type      VARCHAR(50) NOT NULL,  -- 'message' | 'edit' | 'delete' | 'read' | 'typing' | 'join'...
-  platform_event_id VARCHAR(200),
-  raw_payload     JSONB       NOT NULL,  -- 平台返回的完整 JSON
-  processed       BOOLEAN     DEFAULT false,
-  received_at     TIMESTAMPTZ DEFAULT now()
-) PARTITION BY RANGE (received_at);
-
-CREATE INDEX idx_raw_events_account ON raw_events(account_id, received_at DESC);
-CREATE INDEX idx_raw_events_type ON raw_events(event_type, received_at DESC);
-CREATE INDEX idx_raw_events_unprocessed ON raw_events(processed) WHERE processed = false;
-```
-
-### 3.8 `analysis_results`（分析结果表）
-
-```sql
-CREATE TABLE analysis_results (
-  id              UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
-  conversation_id UUID        REFERENCES conversations(id),
-  message_id      UUID        REFERENCES messages(id),
-  account_id      UUID        NOT NULL REFERENCES accounts(id),
-  analysis_type   VARCHAR(30) NOT NULL,  -- 'sentiment' | 'intent' | 'keyword' | 'summary'
-  result          JSONB       NOT NULL,  -- 分析结果（结构随类型变化）
-  model_used      VARCHAR(50),
-  confidence      DECIMAL(3,2),
-  created_at      TIMESTAMPTZ DEFAULT now()
-);
-
-CREATE INDEX idx_analysis_conv_type ON analysis_results(conversation_id, analysis_type);
-CREATE INDEX idx_analysis_message ON analysis_results(message_id);
-CREATE INDEX idx_analysis_created ON analysis_results(created_at DESC);
-```
-
-### 3.9 `translation_records`（翻译审计记录表）
-
-```sql
-CREATE TABLE translation_records (
-  id              UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
-  message_id      UUID        NOT NULL REFERENCES messages(id),
-  source_text     TEXT        NOT NULL,
-  source_lang     VARCHAR(10) NOT NULL,
-  target_lang     VARCHAR(10) NOT NULL,
-  translated_text TEXT        NOT NULL,
-  provider        VARCHAR(20) NOT NULL,
-  model           VARCHAR(50),
-  character_count INTEGER,
-  latency_ms      INTEGER,
-  cost_usd        DECIMAL(10,6),
-  cache_hit       BOOLEAN     DEFAULT false,
-  created_at      TIMESTAMPTZ DEFAULT now()
-);
-
-CREATE INDEX idx_translation_message ON translation_records(message_id);
-CREATE INDEX idx_translation_provider ON translation_records(provider, created_at DESC);
-CREATE INDEX idx_translation_cache_miss ON translation_records(cache_hit) WHERE cache_hit = false;
-```
-
-### 3.10 `conversation_aliases`（客户匿名化别名表）
-
-```sql
-CREATE TABLE conversation_aliases (
-  id              UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
-  conversation_id UUID        NOT NULL REFERENCES conversations(id),
-  identity_id     UUID        NOT NULL REFERENCES external_identities(id),
-  alias_name      VARCHAR(100) NOT NULL,  -- 匿名化显示名
-  alias_avatar    TEXT,          -- 匿名化头像 URL
-  assigned_by     UUID,          -- 操作人 account_id
-  active          BOOLEAN     DEFAULT true,
-  created_at      TIMESTAMPTZ DEFAULT now()
-);
-
-CREATE UNIQUE INDEX idx_conv_aliases_unique
-  ON conversation_aliases(conversation_id, identity_id) WHERE active = true;
-CREATE INDEX idx_conv_aliases_identity ON conversation_aliases(identity_id);
-```
-
-### 3.11 `visibility_policies`（可见性策略表）
-
-记录“谁在什么范围内可以看到哪些敏感字段”，用于服务端白名单投影。
-
-```sql
-CREATE TABLE visibility_policies (
-  id              UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
-  viewer_type     VARCHAR(20) NOT NULL,  -- 'user' | 'role'
-  viewer_id       UUID        NOT NULL,  -- 指向 internal_users.id 或 role_id
-  target_type     VARCHAR(20) NOT NULL,  -- 'conversation' | 'identity' | 'global'
-  target_id       UUID,                  -- conversation_id 或 identity_id，global 时为 NULL
-  fields_visible  JSONB       NOT NULL DEFAULT '[]',  -- 可见字段白名单：['real_name','phone','avatar','username']
-  granted_by      UUID        NOT NULL,  -- 操作人
-  granted_at      TIMESTAMPTZ DEFAULT now(),
-  expires_at      TIMESTAMPTZ,           -- NULL = 永不过期
-  revoked_at      TIMESTAMPTZ            -- 非 NULL = 已撤销
-);
-
-CREATE INDEX idx_visibility_viewer_active
-  ON visibility_policies(viewer_type, viewer_id)
-  WHERE revoked_at IS NULL;
-CREATE INDEX idx_visibility_target_active
-  ON visibility_policies(target_type, target_id)
-  WHERE revoked_at IS NULL;
-CREATE INDEX idx_visibility_expires_active
-  ON visibility_policies(expires_at)
-  WHERE expires_at IS NOT NULL AND revoked_at IS NULL;
-```
-
-### 3.12 `visibility_audit_log`（可见性审计日志表）
+### 4.4 khub_visibility_audit_log（可见性审计日志）
 
 记录授权、撤销、过期和修改动作，满足追责审计需要。
 
 ```sql
-CREATE TABLE visibility_audit_log (
-  id              UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
-  policy_id       UUID        REFERENCES visibility_policies(id),
-  action          VARCHAR(20) NOT NULL,  -- 'grant' | 'revoke' | 'expire' | 'modify'
-  operator_id     UUID        NOT NULL,  -- 操作人
-  viewer_id       UUID        NOT NULL,
-  target_id       UUID,
-  fields_before   JSONB,
-  fields_after    JSONB,
-  reason          TEXT,
-  created_at      TIMESTAMPTZ DEFAULT now()
+CREATE TABLE khub_visibility_audit_log (
+  id            UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+  policy_id     UUID        NOT NULL REFERENCES khub_visibility_policies(id),
+  action        VARCHAR(20) NOT NULL,   -- 'grant' | 'revoke' | 'expire' | 'modify'
+  actor_user_id UUID        NOT NULL,   -- 操作人（'system' 表示定时回收）
+  before_state  JSONB,                  -- 变更前状态快照
+  after_state   JSONB,                  -- 变更后状态快照
+  created_at    TIMESTAMPTZ DEFAULT now()
 );
 
-CREATE INDEX idx_audit_policy ON visibility_audit_log(policy_id);
-CREATE INDEX idx_audit_viewer ON visibility_audit_log(viewer_id, created_at DESC);
-CREATE INDEX idx_audit_created ON visibility_audit_log(created_at DESC);
+-- 按 policy 查询审计历史
+CREATE INDEX idx_visibility_audit_policy
+  ON khub_visibility_audit_log(policy_id);
+
+-- 按时间查询
+CREATE INDEX idx_visibility_audit_created
+  ON khub_visibility_audit_log(created_at);
 ```
-
-### 3.13 `export_tasks`（导出任务表）
-
-管理平行语料、结构化对话、CSV/JSON 等异步导出任务。
-
-```sql
-CREATE TABLE export_tasks (
-  id              UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
-  requested_by    UUID        NOT NULL,
-  export_type     VARCHAR(30) NOT NULL,  -- 'parallel_corpus' | 'structured_dialog' | 'csv' | 'json'
-  filters         JSONB       NOT NULL,  -- {time_range, account_ids, conversation_ids, platforms, languages}
-  status          VARCHAR(20) DEFAULT 'pending',  -- 'pending' | 'processing' | 'completed' | 'failed'
-  progress        INTEGER     DEFAULT 0,  -- 0-100
-  result_file_key TEXT,                   -- 对象存储键
-  result_file_size BIGINT,
-  row_count       BIGINT,
-  error_message   TEXT,
-  created_at      TIMESTAMPTZ DEFAULT now(),
-  completed_at    TIMESTAMPTZ
-);
-
-CREATE INDEX idx_export_status ON export_tasks(status, created_at DESC);
-CREATE INDEX idx_export_user ON export_tasks(requested_by, created_at DESC);
-```
-
-### 3.14 `glossaries`（术语表主表）
-
-支持多级作用域的术语表定义，用于翻译前后的一致性约束。
-
-```sql
-CREATE TABLE glossaries (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  name VARCHAR(255) NOT NULL,
-  description TEXT,
-  scope VARCHAR(50) NOT NULL,       -- 'global' | 'scenario' | 'account'
-  scope_id VARCHAR(255),            -- scenario_id 或 account_id
-  source_language VARCHAR(10) NOT NULL,
-  target_language VARCHAR(10) NOT NULL,
-  is_active BOOLEAN DEFAULT true,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW()
-);
-```
-
-### 3.15 `glossary_entries`（术语条目表）
-
-```sql
-CREATE TABLE glossary_entries (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  glossary_id UUID REFERENCES glossaries(id) ON DELETE CASCADE,
-  source_term VARCHAR(500) NOT NULL,
-  target_term VARCHAR(500) NOT NULL,
-  context TEXT,
-  case_sensitive BOOLEAN DEFAULT false,
-  exact_match BOOLEAN DEFAULT true,
-  priority INT DEFAULT 0,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW(),
-  UNIQUE(glossary_id, source_term)
-);
-```
-
-作用域优先级：`account > scenario > global`。`priority` 字段用于同层级内进一步排序。
 
 ---
 
-## 4. 表职责总览
+## 5. Tracy message_raw 表增强字段（D-01 方案 C）
 
-| 类别 | 表名 | 作用 |
+以下字段由 Tracy 侧实施，kHub 通过 `POST /ingest/message_raw` 写入。
+
+```sql
+-- Tracy message_raw 表新增字段（由 Tracy 实施 D-01）
+ALTER TABLE message_raw ADD COLUMN IF NOT EXISTS conversation_seq              BIGINT;
+ALTER TABLE message_raw ADD COLUMN IF NOT EXISTS platform_msg_id              VARCHAR(200);
+ALTER TABLE message_raw ADD COLUMN IF NOT EXISTS display_text                 TEXT;
+ALTER TABLE message_raw ADD COLUMN IF NOT EXISTS translated_text              TEXT;
+ALTER TABLE message_raw ADD COLUMN IF NOT EXISTS status                       VARCHAR(20) DEFAULT 'received';
+ALTER TABLE message_raw ADD COLUMN IF NOT EXISTS status_updated_at_ms         BIGINT;
+ALTER TABLE message_raw ADD COLUMN IF NOT EXISTS failure_code                 VARCHAR(50);
+ALTER TABLE message_raw ADD COLUMN IF NOT EXISTS failure_message              TEXT;
+ALTER TABLE message_raw ADD COLUMN IF NOT EXISTS platform_message_id_returned VARCHAR(200);
+ALTER TABLE message_raw ADD COLUMN IF NOT EXISTS raw_payload_id               UUID;
+ALTER TABLE message_raw ADD COLUMN IF NOT EXISTS agent_platform_account       VARCHAR(100);
+```
+
+**字段说明：**
+
+| 字段 | 类型 | 说明 |
 |------|------|------|
-| 账号与身份 | `accounts` | 管理我方受控 IM 账号 |
-| 账号与身份 | `external_identities` | 管理外部联系人主档 |
-| 会话 | `conversations` | 统一会话主表 |
-| 会话 | `conversation_participants` | 记录会话参与者与角色 |
-| 消息 | `messages` | 消息主表，承载三轨文本与顺序权威 |
-| 消息 | `attachments` | 媒体、文件与缩略图元数据 |
-| 原始事件 | `raw_events` | 保存平台原始载荷，用于排障/回放/抽样 |
-| 分析 | `analysis_results` | 存放意图、情感、摘要等分析结果 |
-| 翻译 | `translation_records` | 存放翻译审计、成本、延迟、缓存命中 |
-| 脱敏 | `conversation_aliases` | 管理客户匿名别名与匿名头像 |
-| 脱敏 | `visibility_policies` | 管理 viewer × target 的敏感字段授权 |
-| 脱敏 | `visibility_audit_log` | 记录授权、撤销、过期与修改审计 |
-| 导出 | `export_tasks` | 管理训练数据与报表导出异步任务 |
-| 术语 | `glossaries` | 管理术语表作用域与语言方向 |
-| 术语 | `glossary_entries` | 管理具体术语映射规则 |
+| `conversation_seq` | BIGINT | 由 Tracy ingest 路由通过 PG advisory lock 分配，单调递增 |
+| `platform_msg_id` | VARCHAR(200) | 平台原始消息 ID，用于去重（UNIQUE 约束） |
+| `display_text` | TEXT | 展示文本（经过格式化） |
+| `translated_text` | TEXT | 翻译结果文本 |
+| `status` | VARCHAR(20) | 消息状态：received / pending / sent / delivered / read / failed / timeout |
+| `status_updated_at_ms` | BIGINT | 状态最后更新时间（毫秒时间戳） |
+| `failure_code` | VARCHAR(50) | 发送失败错误码 |
+| `failure_message` | TEXT | 发送失败错误信息 |
+| `platform_message_id_returned` | VARCHAR(200) | 平台返回的消息 ID（出站发送成功后回填） |
+| `raw_payload_id` | UUID | 关联 khub_raw_events.id |
+| `agent_platform_account` | VARCHAR(100) | 多账号隔离字段（标识接收/发送此消息的受控账号） |
 
 ---
 
-## 5. 分区策略
+## 6. 表职责总览
 
-### 5.1 `messages` 按 `sent_at` 做 RANGE 月分区
-
-```sql
--- 示例：2025年1月分区
-CREATE TABLE messages_2025_01 PARTITION OF messages
-  FOR VALUES FROM ('2025-01-01') TO ('2025-02-01');
-```
-
-设计目的：
-
-- 把高频写入和按时间范围查询控制在小分区内
-- 让历史数据归档与冷迁移成为分区级操作
-- 降低全表 vacuum、索引维护和备份恢复的成本
-
-### 5.2 `raw_events` 按 `received_at` 做 RANGE 月分区
-
-`raw_events` 的增长速度高于 `messages`，并且更偏审计/排障用途，因此单独按接收时间做月分区，便于快速冷热切换和分区 DETACH。
-
-### 5.3 自动分区管理
-
-使用 `pg_partman` 自动管理分区：
-
-- `premake = 3`：提前创建未来 3 个月分区
-- `retention = '3 months'`：到期后自动 detach 历史分区
-
-### 5.4 预估数据量
-
-| 指标 | 日 | 月 | 年 |
-|------|-----|------|------|
-| 消息量 | 500K | 15M | 180M |
-| 消息存储 | ~500MB | ~15GB | ~180GB |
-| `raw_events`（约为消息 1.5x） | ~750MB | ~22GB | ~270GB |
+| 归属 | 表名 | 作用 |
+|------|------|------|
+| kHub | `khub_raw_events` | kHub 原始事件缓冲，入站/出站事件存档，状态追踪 |
+| kHub | `khub_accounts` | 受控 IM 账号管理，凭据引用，连接状态 |
+| kHub | `khub_visibility_policies` | 可见性策略白名单，控制 sales 可见字段 |
+| kHub | `khub_visibility_audit_log` | 可见性操作审计日志 |
+| Tracy（增强） | `message_raw` + 新字段 | 消息主存储，conversation_seq 排序权威，出站状态机 |
+| Tracy（已有） | `translation_records` | 翻译审计（Tracy 管理） |
+| Tracy（已有） | `analysis_results` | 分析结果（Tracy 管理） |
+| Tracy（已有） | `leads` / `profiles` | 客户/Leads 数据（Tracy 管理） |
 
 ---
 
-## 6. 数据生命周期
+## 7. 命名与隔离规则
 
-```text
-┌──────────────────────────────────────────────────┐
-│                  数据温度分层                      │
-├──────────┬──────────────┬────────────────────────┤
-│   Hot    │    Warm      │        Cold            │
-│  0-3 月  │   3-12 月    │       >12 月           │
-├──────────┼──────────────┼────────────────────────┤
-│ 主分区    │ 压缩分区     │ Parquet → 对象存储     │
-│ SSD 存储  │ HDD/廉价SSD  │ 分区 DETACH           │
-│ 全索引    │ 核心索引     │ 仅通过导入查询         │
-│ 实时查询  │ 秒级查询     │ 分钟级离线分析         │
-└──────────┴──────────────┴────────────────────────┘
-```
-
-### 6.1 Hot 层（0-3 月）
-
-- 使用主分区，部署在 SSD
-- 保留完整索引
-- 主要服务实时会话、全局搜索、翻译回查、管理台审计、工作台高频查询
-
-### 6.2 Warm 层（3-12 月）
-
-- 转为压缩分区或迁移到低成本存储盘
-- 仅保留核心索引
-- 仍支持秒级查询，但不追求极限低延迟
-
-### 6.3 Cold 层（>12 月）
-
-- 将历史分区导出为 Parquet 到对象存储
-- 通过分区 DETACH 从主库摘除
-- 主要用于离线分析、训练样本抽样、历史归档取证
-
-### 6.4 `raw_events` 特殊保留策略
-
-`raw_events` 更偏调试和回溯，因此生命周期更短：
-
-- Hot：1 个月
-- Warm：1-3 个月
-- Cold：>3 个月导出为 Parquet，再做分区 DETACH
+| 规则 | 说明 |
+|------|------|
+| Tracy 已有表 | 保持原名（message_raw, translation_records 等） |
+| kHub 新建表 | 统一 `khub_` 前缀 |
+| 共享实例隔离 | 靠表名前缀 + schema 权限控制 |
+| kHub 不直读 Tracy 表 | 通过 HTTP API 获取数据 |
+| Tracy 不直读 kHub 表 | kHub 表仅 kHub 进程读写 |
 
 ---
 
-## 7. 消息序号设计
+## 8. ID 命名规范
 
-每个会话维护一个单调递增的 `conversation_seq`，作为会话内消息顺序的唯一权威。
-
-### 7.1 用途
-
-- **消息排序**：定义会话内绝对顺序
-- **Gap 检测**：客户端上报 `last_seen_seq=100`，服务端发现 101-105 缺失时触发补发
-- **增量同步**：客户端断线重连后发送 `last_sync_seq`，服务端返回 seq 更大的消息
-- **分页**：用 seq 做 keyset pagination，避免深分页 OFFSET 性能劣化
-
-### 7.2 实现方案
-
-每个 `conversation` 对应一个 PostgreSQL `SEQUENCE`，命名约定为 `seq_conv_{conversation_id}`。在消息写入事务中调用 `nextval()` 获取 `conversation_seq`。
-
-该方案在 V1/V2 消息量下性能足够，单序列每秒可分配超过 100K 个值。若未来出现极端热点单会话，可切换为 Redis `INCR` 分配并异步回写 PostgreSQL，但在当前阶段不必过早复杂化。
+| ID 类型 | 格式 | 示例 |
+|--------|------|------|
+| conversation_id | `<platform>::<native_conversation_id>` | `telegram::123456789` |
+| message_id | `<platform>::<native_conversation_id>::<native_message_id>` | `telegram::123456789::987` |
+| platform_msg_id | `<native_message_id>` | `987` |
+| 多账号隔离 | `agent_platform_account` 字段 | Tracy message_raw 表字段 |
+| khub_accounts.id | UUID | `550e8400-e29b-41d4-a716-446655440000` |
+| khub_raw_events.id | UUID | `550e8400-e29b-41d4-a716-446655440001` |
+| visibility policy id | UUID | `550e8400-e29b-41d4-a716-446655440002` |
 
 ---
 
-## 8. 数据模型与上层能力的对应关系
+## 9. 数据生命周期
 
-| 上层能力 | 关键表 | 说明 |
-|---------|--------|------|
-| 动态可见性控制 | `visibility_policies`、`visibility_audit_log`、`conversation_aliases` | 支撑服务端白名单投影、撤销路径、审计追责、定时回收 |
-| 跨平台跨会话搜索 | `messages` | 原文与译文统一存储，便于做双索引检索 |
-| 训练数据导出 | `messages`、`translation_records`、`analysis_results`、`conversation_aliases`、`export_tasks` | 支撑平行语料和结构化对话导出 |
-| 实时消息闭环 | `messages`、`raw_events`、`attachments` | 支撑入站、出站、媒体与回放 |
-| 术语约束翻译 | `glossaries`、`glossary_entries` | 支撑术语加载、注入、后处理校验 |
+### 9.1 khub_raw_events
 
----
+| 阶段 | 时间范围 | 策略 |
+|------|---------|------|
+| Hot | 0-7 天 | 主表，全索引，实时查询 |
+| Warm | 7-30 天 | 保留，降低查询优先级 |
+| Cold | >30 天 | 可归档到对象存储（V2 实现） |
 
-## 9. 结论
+**说明**：khub_raw_events 主要用于事件缓冲和状态追踪，消息的长期存储由 Tracy message_raw 负责。
 
-这套数据模型有三个核心特点：
+### 9.2 khub_visibility_policies
 
-1. **统一消息主存储**：原文、译文、分析和导出不再分裂在多个系统中。
-2. **面向业务控制**：可见性、审计、匿名化、导出任务都作为一等实体建模。
-3. **面向未来演进**：分区、冷热分层、术语表、训练导出、事件归档都为 V2/V3 留出扩展空间。
+- 已撤销的策略（`revoked_at_ms IS NOT NULL`）保留 90 天用于审计，之后可归档
+- 有效策略永久保留
+
+### 9.3 khub_visibility_audit_log
+
+- 审计日志永久保留（合规要求）
+- V2 可考虑按时间分区
+
+### 9.4 khub_accounts
+
+- 账号记录永久保留（含已停用/封禁的账号）
+- 凭据引用在账号停用后清除
 
 ---
 
