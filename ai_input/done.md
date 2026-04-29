@@ -111,3 +111,38 @@ Telegram桥接和WhatsApp的不同账号的桥接团队其它team已经完善，
 - 加入一个seciton，精简总结：`Matrix 路线 vs 自建 Core 路线` 的内容，由于结论是自建Core，简要说明即可，重点时说明自建时哪些可以参考matrix方案
 
 ---
+继续优化plan_v2:
+
+## 说明
+- 将引用plan_v1的内容直接写到v2，当做完整的文档处理
+- 删除`2.2 需要技术团队确认`
+- 将`5. 数据模型`提取出来一个当独的文档
+- 重新组织内容，按照feedback(ai_input/resources/kHub_feedback-2026-04-25.md)中的`1. 我们要实现的核心功能`来呈现，内容结构：需求→方案→说明
+
+---
+仔细阅读cto给的资料包，准备进行详细plan的设计，要求：
+- 必须完整了解所有内容
+- 结合已经完成的plan_v1.1（docs/v1/kHub_plan_v1-1.md），总结一份我需要总结了解的清单，配个清单项附上简要说明，已经对应要实现的功能模块
+- 资料包：ai_input/resources/dev_resources
+
+--
+
+确认，写一份plan_v1-2（plan v1.2）:
+
+## 重要
+- 先输出markdown，再调用writing tool写入文档
+
+---
+继续优化plan_v1-2
+
+## 重要
+- 先输出markdown，再调用writing tool写入文档
+
+## 说明
+- 将内容中所有技术实现细节独立为kHub_plan_ts_v1(技术实现)，保留拓扑、策略、流程、链路、机制等涉及到定义部分，拆分具体代码
+- 将里面的数据表、model放到kHub_data_model_v1：docs/v1/kHub_data_model_v1.md
+- 不需要列出与1.1的差异，直接写v1.2需要实现的结论
+- 按大的功能模块来组织内容，目前的输出逻辑太乱太分散了
+- 在文档开头生成一个目录（toc）
+
+---

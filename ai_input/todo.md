@@ -1,7 +1,31 @@
-继续优化plan_v2:
+基于plan_v1.2和已有的管理工作台，设计kHub_workbench_prd_v1(kHub 销售工作台产品文档V1)
+
+## 重要
+- 先输出markdown，再调用writing tool写入文档
 
 ## 说明
-- 将引用plan_v1的内容直接写到v2，当做完整的文档处理
-- 删除`2.2 需要技术团队确认`
-- 将`5. 数据模型`提取出来一个当独的文档
-- 重新组织内容，按照feedback(ai_input/resources/kHub_feedback-2026-04-25.md)中的`1. 我们要实现的核心功能`来呈现，内容结构：需求→方案→说明
+- 核心功能：
+    - 会话列表
+    - 对话详情（原文/译文切换）
+    - AI 分析侧栏
+    - 建议回复区
+    - 消息回放入口
+- 参考plan_v1.2：docs/v1/kHub_plan_v1-2.md
+- 参考已有管理工作台：ai_input/resources/dev_resources/handoff/B-keep-as-is/09-admin-spa-inventory.md
+- 包含详细的功能大纲、工作流、重点模块说明
+
+---
+
+基于plan_v1.2和已有的管理工作台，设计kHub_dashboard_ext_v1(管理看板扩展产品文档)
+
+## 重要
+- 先输出markdown，再调用writing tool写入文档
+
+## 说明
+- 参考plan_v1.2：docs/v1/kHub_plan_v1-2.md
+- 基于已有管理工作台：ai_input/resources/dev_resources/handoff/B-keep-as-is/09-admin-spa-inventory.md
+- 核心新增Visibility 管理 + Account Health功能
+- 包括功能模块，工作流、信息流等
+- 新增的模块由kHub提供api，需要包含功能模块对应的api调用说明
+
+--- 
