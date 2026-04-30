@@ -26,16 +26,16 @@
 | 项目 | 内容 |
 |------|------|
 | 文档标题 | kHub V1.2 实施计划 |
-| 版本 | v1.2 |
-| 日期 | 2026-04-29 |
-| 状态 | 修订稿 |
+| 版本 | v1.2.2 |
+| 日期 | 2026-04-30 |
+| 状态 | 路线图细化 |
 | 关联文档 | kHub_plan_ts_v1.md（技术实现）、kHub_data_model_v1.md（数据模型） |
 
 ---
 
 ## 2. 项目定位与目标
 
-> **kHub = IM 平台壳层 + 销售工作台**
+> **kHub = IM 中间平台 + 销售工作台**
 >
 > kHub 的职责是：把多平台 IM Connector 接入进来，经过 Tracy 已有的翻译/分析管道处理，最终通过一个实时 Web 工作台呈现给销售员。数据中台能力（存储、翻译、分析、客户管理）由 Tracy Core API 提供。
 
@@ -230,7 +230,7 @@ Tracy 已有 4 档角色模型，kHub 沿用：
 | L1 进程内同步 | Node.js EventEmitter（typed-emitter） | kHub 模块间零延迟通信 |
 | L2 异步任务队列 | BullMQ（基于 kHub Redis） | 出站重试、过期回收、断线缓冲清理 |
 
-**Agent Facade 处置：** V1 先用 EventEmitter 占位，暴露统一事件格式。等 Tracy unified-contract spec 出来后再切。
+**Event Bus 设计：** V1 阶段 kHub 只服务销售工作台单一消费方，不需要协议层。直接使用 typed EventEmitter 作为进程内事件总线，无需额外抽象。
 
 **V1 事件目录：**
 
@@ -265,19 +265,20 @@ Tracy 已有 4 档角色模型，kHub 沿用：
     │  ConnectorRegistry   │
     └───┬─────────────┬───┘
         │             │
-   ┌────▼────┐  ┌────▼──────────┐
+   ┌────▼─────┐  ┌───▼───────────┐
    │TG Adapter│  │WA Adapter     │
-   │(Shim)    │  │(HTTP Client)  │
+   │(HTTP)    │  │(HTTP Client)  │
    └────┬─────┘  └────┬──────────┘
         │             │
-   ┌────▼────┐  ┌────▼──────┐
-   │TDLib    │  │Go Service │
-   │(子进程)  │  │(:9800)    │
-   └─────────┘  └───────────┘
+   ┌────▼─────────┐  ┌────▼──────┐
+   │TDLib Service │  │Go Service │
+   │(Docker/HTTP) │  │(:9800)    │
+   └──────────────┘  └───────────┘
 ```
 
 **关键机制：**
 
+- TG Adapter 和 WA Adapter 均通过 HTTP 调用各自的 Connector 服务，风格统一
 - ConnectorRegistry 启动时从 Plugin Config 读取 `khub.connector.*` 配置，实例化对应 Adapter
 - 断连自动重连：指数退避 1s → 2s → 4s → 8s → 16s → 30s（上限）
 - 健康检查：每 30s 轮询各 adapter 的 getConnectionStatus
@@ -533,22 +534,22 @@ khub.* 配置项：
 
 ### 7.2 D 档改造协调
 
-D 档改造由 Tracy 侧负责实施，kHub 侧提供需求规格和验收标准。
+D 档改造由 Tracy 侧负责实施（CTO 忙完后直接推 GitHub），kHub 侧 clone 源码本地使用。
 
 | 编号 | 改造内容 | Tracy 工作量 | 阻塞关系 | kHub 验收标准 |
 |------|---------|------------|---------|-------------|
-| D-01 | Postgres 共享 + message_raw 增强方案 C | 2-3 人天 | 阻塞 Phase 1 | kHub 能连接共享 PG，message_raw 新字段可写 |
+| D-01 | Postgres 共享 + message_raw 增强方案 C | 2-3 人天 | 阻塞 Phase 2 | kHub 能连接共享 PG，message_raw 新字段可写 |
 | D-02 | Ingest 路由增强（conversation_seq + platform_msg_id 强去重） | 1-2 人天 | 阻塞 Phase 2 | POST /ingest 返回 conversation_seq，重复 platform_msg_id 返回 409 |
 | D-03 | RBAC 加 grant_visibility_policy capability | 1 人天 | 阻塞 Phase 4 | supervisor/boss 能授予/撤销 visibility policy |
-| D-04 | unified-contract 吸收 Agent Facade | V1 先占位 | 不阻塞 | V1 EventEmitter 占位，接口格式对齐 |
+| ~~D-04~~ | ~~unified-contract 吸收 Agent Facade~~ | — | — | ~~已取消：V1 单一消费方，不需要协议层~~ |
 | D-05 | V1 轮询 /analysis_pack，V2 升级事件推送 | 0.5 人天 | 不阻塞 | GET /analysis_pack 支持 status 过滤 |
 | D-06 | Plugin Config 加 khub.* 命名空间 | 0.5 人天 | 阻塞 Phase 3 | GET /plugin/config/resolved 返回 khub.* 配置项 |
 | D-07 | trace_id 透传 X-Trace-Id header | 0.5 人天 | 阻塞 Phase 1 | Tracy response header 包含 X-Trace-Id |
 | D-08 | Admin SPA 加 2 Page（Visibility 管理 + Account Health） | 3-4 人天 | 阻塞 Phase 4 | Visibility 管理 Page + Account Health Page |
-| D-09 | V1 临时复制 contracts 类型，V1+ 切 npm package | 1 人天 | 阻塞 Phase 1 | kHub 可 import 共享类型定义 |
+| D-09 | 从 Tracy 源码直接复制 contracts 类型定义 | 0 人天（kHub 自行完成） | 阻塞 Phase 1 | kHub 可 import 共享类型定义 |
 | D-10 | weakDedupe V1 保留兜底，V2 删除 | 0 人天 | 不阻塞 | message_raw 已有 platform_msg_id 唯一约束 |
 
-**Tracy 改造工作量总计：5-12 人天**
+**Tracy 改造工作量总计：~8-12 人天**（D-04 取消，D-09 改为 kHub 自行完成）
 
 ---
 
@@ -608,59 +609,338 @@ D 档改造由 Tracy 侧负责实施，kHub 侧提供需求规格和验收标准
 
 ## 9. 实施路线图
 
-### Phase 1：研究 + 数据层对齐（第 1-2 周）
+> **核心原则：** kHub 侧完全独立推进，不阻塞等待 Tracy。后端直接 clone Tracy 源码本地跑，不依赖远程 staging API。
 
-| 任务 | 负责方 | 产出 |
-|------|--------|------|
-| 阅读交付包，确认范围共识 | kHub + Tracy | 范围确认会议纪要 |
-| 与 Tracy 决策 D-01 ~ D-10 | kHub + Tracy | D 档改造单全部拍板 |
-| Tracy 实施 D-01/02/03/06/07/09 | Tracy | 改造完成并部署 staging |
-| 验证 TDLib Node.js 兼容性 | kHub | 技术验证报告 |
-| 初始化 monorepo + Docker Compose | kHub | PG + Redis + MinIO + kHub 骨架 |
-| 调通 Tracy staging：login + translate 一次往返 | kHub | 接口联调通过 |
-| 共享类型复制（D-09） | kHub | contracts types 可 import |
+### Phase 1：独立验证 + 骨架搭建（第 1-2 周）
 
-**出口标准：** 本地起 Tracy Core API + kHub 骨架，跑通 /auth/login + /translate 一次完整往返，D-01 ~ D-10 全部拍板。
+#### 1.1 初始化项目骨架
 
-### Phase 2：Connector + Message Core（第 3-4 周）
+| # | 子任务 | 产出 |
+|---|--------|------|
+| 1.1.1 | 初始化 Node.js 20 + TypeScript strict 项目（tsconfig、eslint、prettier） | 可编译的空项目 |
+| 1.1.2 | 配置 Vitest 测试框架 | `pnpm test` 可运行 |
+| 1.1.3 | 搭建 Fastify 应用入口 + `/health`、`/ready` 路由 | 服务可启动，健康检查可访问 |
+| 1.1.4 | 搭建 config 模块（环境变量校验 + 类型安全读取） | 所有 env 统一入口 |
+| 1.1.5 | 搭建 shared 模块（错误码定义、通用类型、trace-id 工具） | 共享基础设施就绪 |
 
-| 任务 | 负责方 | 产出 |
-|------|--------|------|
-| ConnectorAdapter 接口 + ConnectorRegistry | kHub | 接口定义 + 注册机制 |
-| TG Adapter Shim（含 TDLib 子进程隔离） | kHub | TG Connector 可用 |
-| WA Adapter Shim（HTTP 调 Go:9800） | kHub | WA Connector 可用 |
-| Message Core（khub_raw_events + ingest + conversation_seq） | kHub | 入站链路打通 |
-| 出站链路（发送 → ConnectorAdapter → 状态机回写） | kHub | 出站链路打通 |
+**依赖关系：** 无前置依赖，Phase 1 第一步。
 
-**出口标准：** TG 收到消息 → 落库 → 翻译 → 分析结果回写；出站消息发送成功并回写状态。
+#### 1.2 Docker Compose 编排
 
-### Phase 3：WebSocket + 销售工作台（第 5-6 周）
+| # | 子任务 | 产出 |
+|---|--------|------|
+| 1.2.1 | 编写 docker-compose.yml（PG + Redis + MinIO） | 基础设施一键启动 |
+| 1.2.2 | 添加 TDLib Service 容器（基于社区 Docker 镜像或自建） | TDLib HTTP API 可调用 |
+| 1.2.3 | 添加 kHub 本体 Dockerfile（开发模式，热重载） | `docker compose up` 全栈启动 |
+| 1.2.4 | 编写 `.env.example` + 启动文档 | 新人 clone 后 5 分钟内可跑通 |
 
-| 任务 | 负责方 | 产出 |
-|------|--------|------|
-| WebSocket Gateway + 心跳 + 重连 + 增量同步 | kHub | WS 实时推送可用 |
-| Redis Pub/Sub fan-out | kHub | 多实例推送支持 |
-| 销售工作台骨架（React 19 + Zustand + shadcn） | kHub | UI 骨架 |
-| 会话列表 + 消息详情 + 翻译切换 | kHub | 核心页面可用 |
-| 出站发消息（输入 → 翻译预览 → 确认 → ConnectorAdapter） | kHub | 出站闭环 |
-| 分析侧栏（轮询 analysis_pack → WS 推） | kHub | 分析展示 |
-| Tracy 实施 D-06（Plugin Config khub.*） | Tracy | 配置可拉取 |
+**依赖关系：** 1.2.1 无依赖；1.2.2 依赖 TDLib 镜像调研（1.3）；1.2.3 依赖 1.1。
 
-**出口标准：** 销售员在工作台能完整收发消息，翻译预览可用，消息状态实时更新，分析结果展示。
+#### 1.3 TDLib 兼容性验证
+
+| # | 子任务 | 产出 |
+|---|--------|------|
+| 1.3.1 | 调研 TDLib Docker 镜像方案（社区镜像 vs 自建 HTTP wrapper） | 技术选型结论 |
+| 1.3.2 | 在 Docker 容器内跑通 TDLib 登录（手机号 + 验证码） | 登录流程验证通过 |
+| 1.3.3 | 验证收消息：监听 `updateNewMessage`，打印到 stdout | 入站事件可接收 |
+| 1.3.4 | 验证发消息：调用 `sendMessage` 发送文本 | 出站发送成功 |
+| 1.3.5 | 验证稳定性：连续运行 24h，记录内存占用和重连次数 | 稳定性报告 |
+
+**依赖关系：** 1.3.1 无依赖；1.3.2~1.3.5 串行执行；与 1.1/1.2 可并行。
+
+#### 1.4 ConnectorAdapter 接口 + Registry
+
+| # | 子任务 | 产出 |
+|---|--------|------|
+| 1.4.1 | 定义 `ConnectorAdapter` 接口（生命周期、收发、能力声明） | `src/connector/types.ts` |
+| 1.4.2 | 定义 `InboundMessageEvent`、`SendMessageParams`、`SendResult` 等类型 | 完整类型体系 |
+| 1.4.3 | 实现 `ConnectorRegistry`（注册、查找、健康检查轮询） | Registry 可用 |
+| 1.4.4 | 编写 ConnectorAdapter 单元测试（mock adapter） | 测试覆盖 |
+
+**依赖关系：** 依赖 1.1（项目骨架）；与 1.3 可并行。
+
+#### 1.5 TG Adapter 实现
+
+| # | 子任务 | 产出 |
+|---|--------|------|
+| 1.5.1 | 实现 TG Adapter HTTP Client（封装 TDLib Service 的 HTTP API） | HTTP 调用层 |
+| 1.5.2 | 实现入站事件映射：TDLib webhook/polling → `InboundMessageEvent` | 入站可用 |
+| 1.5.3 | 实现出站发送：`sendMessage` → HTTP POST TDLib Service | 出站可用 |
+| 1.5.4 | 实现连接管理：connect/disconnect/getConnectionStatus | 生命周期可用 |
+| 1.5.5 | 集成测试：Docker 环境内 TG 收发消息端到端验证 | E2E 通过 |
+
+**依赖关系：** 依赖 1.3（TDLib 验证通过）+ 1.4（接口定义）。
+
+#### 1.6 Tracy 本地化 + 共享类型
+
+| # | 子任务 | 产出 |
+|---|--------|------|
+| 1.6.1 | Clone Tracy 源码，按 README 本地跑通 | Tracy API 本地可调用 |
+| 1.6.2 | 将 Tracy 加入 Docker Compose（或独立启动脚本） | 开发环境完整 |
+| 1.6.3 | 从 Tracy 源码提取 contracts 类型定义到 `src/shared/tracy-contracts/` | kHub 可 import |
+| 1.6.4 | 验证 Tracy `/auth/login` + `/translate` 一次往返 | 联调基线通过 |
+
+**依赖关系：** 1.6.1 无依赖（CTO 推代码后即可开始）；1.6.2 依赖 1.2.1；1.6.3 依赖 1.6.1；1.6.4 依赖 1.6.2 + 1.1。
+
+#### Phase 1 执行顺序总览
+
+```
+Week 1:
+  1.1 项目骨架 ──────────────────────────────────────►
+  1.2 Docker Compose ────────────────────────────────►
+  1.3 TDLib 验证 ────────────────────────────────────► (可与 1.1/1.2 并行)
+
+Week 2:
+  1.4 ConnectorAdapter 接口 ─────► (依赖 1.1)
+  1.5 TG Adapter 实现 ──────────► (依赖 1.3 + 1.4)
+  1.6 Tracy 本地化 ─────────────► (CTO 推代码后)
+```
+
+**出口标准：** Docker Compose 一键启动全部服务；TDLib 容器内稳定收发 TG 消息；ConnectorAdapter 接口定义完成并有 TG 实现；Tracy 本地可调用。
+
+---
+
+### Phase 2：Message Core + 数据层打通（第 3-4 周）
+
+#### 2.1 数据层搭建
+
+| # | 子任务 | 产出 |
+|---|--------|------|
+| 2.1.1 | 配置 Drizzle ORM + PG 连接 | ORM 可用 |
+| 2.1.2 | 编写 `khub_raw_events` 表 schema + migration | 表创建成功 |
+| 2.1.3 | 编写 `khub_accounts` 表 schema + migration | 表创建成功 |
+| 2.1.4 | 编写 `khub_visibility_policies` + `khub_visibility_audit_log` schema | 表创建成功 |
+| 2.1.5 | 验证 Tracy `message_raw` 增强字段存在（D-01 方案 C） | 字段可写入 |
+
+**依赖关系：** 依赖 Phase 1 完成（PG 可用 + 项目骨架）；2.1.1 → 2.1.2~2.1.4 串行；2.1.5 依赖 Tracy 本地跑通。
+
+#### 2.2 Event Bus 基础设施
+
+| # | 子任务 | 产出 |
+|---|--------|------|
+| 2.2.1 | 实现 typed EventEmitter（L1 进程内事件） | 事件类型安全 |
+| 2.2.2 | 定义完整事件目录（message.*、account.*、visibility.*） | 事件类型定义 |
+| 2.2.3 | 实现 BullMQ 封装（L2 异步队列：出站重试、过期回收） | 队列可用 |
+| 2.2.4 | 编写 Event Bus 单元测试 | 测试覆盖 |
+
+**依赖关系：** 依赖 1.1（项目骨架）+ Redis 可用；与 2.1 可并行。
+
+#### 2.3 Tracy Client 封装
+
+| # | 子任务 | 产出 |
+|---|--------|------|
+| 2.3.1 | 实现 `tracy-client` 模块骨架（HTTP client + 重试 + trace-id 注入） | 基础 HTTP 层 |
+| 2.3.2 | 封装 `POST /ingest/message_raw`（入站/出站写入） | ingest 可调用 |
+| 2.3.3 | 封装 `POST /translate`（翻译调用） | 翻译可调用 |
+| 2.3.4 | 封装 `GET /analysis_pack`（分析结果轮询） | 分析可查询 |
+| 2.3.5 | 封装 `POST /auth/login`（鉴权） | 登录可用 |
+
+**依赖关系：** 依赖 1.6（Tracy 本地可调用 + contracts 类型）；与 2.1/2.2 可并行。
+
+#### 2.4 Message Core 入站链路
+
+| # | 子任务 | 产出 |
+|---|--------|------|
+| 2.4.1 | 实现入站消息处理器：Adapter 事件 → 写 khub_raw_events | 事件落库 |
+| 2.4.2 | 对接 Tracy ingest：POST /ingest/message_raw → 获取 conversation_seq | 序号分配 |
+| 2.4.3 | 回填 khub_raw_events（status=ingested, conversation_seq） | 状态更新 |
+| 2.4.4 | 触发翻译：POST /translate → 结果回写 | 翻译链路通 |
+| 2.4.5 | 发布 `message.received` 事件 | 事件总线联通 |
+| 2.4.6 | platform_msg_id 去重逻辑（唯一索引 + 409 处理） | 去重可用 |
+
+**依赖关系：** 依赖 2.1（表就绪）+ 2.2（Event Bus）+ 2.3（Tracy Client）+ 1.5（TG Adapter）。
+
+#### 2.5 Message Core 出站链路
+
+| # | 子任务 | 产出 |
+|---|--------|------|
+| 2.5.1 | 实现出站消息状态机（pending → sent → delivered → read / failed / timeout） | 状态流转 |
+| 2.5.2 | 出站流程：写 khub_raw_events → POST Tracy ingest → ConnectorAdapter.sendMessage | 发送链路 |
+| 2.5.3 | 实现重试策略（BullMQ job：5xx 退避、429 遵守 retry_after、4xx 不重试） | 重试可用 |
+| 2.5.4 | 状态回写：成功/失败更新 khub_raw_events + Tracy message_raw | 状态同步 |
+| 2.5.5 | 发布 `message.sent` / `message.failed` 事件 | 事件联通 |
+
+**依赖关系：** 依赖 2.4 完成（入站链路验证了基础设施）。
+
+#### 2.6 WA Adapter 实现
+
+| # | 子任务 | 产出 |
+|---|--------|------|
+| 2.6.1 | 实现 WA Adapter HTTP Client（调用 Go:9800） | HTTP 层 |
+| 2.6.2 | 实现入站事件映射：Go:9800 webhook → `InboundMessageEvent` | 入站可用 |
+| 2.6.3 | 实现出站发送：`sendMessage` → HTTP POST Go:9800 | 出站可用 |
+| 2.6.4 | 注册到 ConnectorRegistry，验证双平台并行工作 | 双平台可用 |
+
+**依赖关系：** 依赖 1.4（ConnectorAdapter 接口）；与 2.4/2.5 可并行。
+
+#### 2.7 端到端联调
+
+| # | 子任务 | 产出 |
+|---|--------|------|
+| 2.7.1 | TG 入站全链路：收消息 → 落库 → Tracy ingest → 翻译 → 分析 | 入站 E2E 通过 |
+| 2.7.2 | TG 出站全链路：发送 → Tracy ingest → Adapter 发送 → 状态回写 | 出站 E2E 通过 |
+| 2.7.3 | 编写集成测试（testcontainers：PG + Redis） | CI 可跑 |
+
+**依赖关系：** 依赖 2.4 + 2.5 完成。
+
+#### Phase 2 执行顺序总览
+
+```
+Week 3:
+  2.1 数据层 ──────────────────►
+  2.2 Event Bus ───────────────► (与 2.1 并行)
+  2.3 Tracy Client ────────────► (与 2.1/2.2 并行)
+  2.6 WA Adapter ──────────────► (与 2.1~2.3 并行)
+
+Week 4:
+  2.4 入站链路 ────────────────► (依赖 2.1 + 2.2 + 2.3)
+  2.5 出站链路 ────────────────► (依赖 2.4)
+  2.7 端到端联调 ──────────────► (依赖 2.4 + 2.5)
+```
+
+**出口标准：** TG 收到消息 → khub_raw_events 落库 → Tracy ingest 返回 conversation_seq → 翻译完成 → 分析结果可查；出站消息发送成功并回写状态。
+
+---
+
+### Phase 3：WebSocket + 实时推送（第 5-6 周）
+
+#### 3.1 WebSocket Gateway 核心
+
+| # | 子任务 | 产出 |
+|---|--------|------|
+| 3.1.1 | Fastify WebSocket 插件集成 + 连接管理器 | WS 可建连 |
+| 3.1.2 | 实现鉴权：建连时 JWT 验签 + role=sales 校验 | 鉴权可用 |
+| 3.1.3 | 实现心跳：ping/pong + 90s 超时断连 | 心跳可用 |
+| 3.1.4 | 实现服务端推送协议（ServerPushEvent 格式） | 推送格式定义 |
+| 3.1.5 | 实现客户端命令协议（ClientCommand 解析 + 路由） | 命令处理 |
+
+**依赖关系：** 依赖 Phase 1（Fastify 骨架）+ config 模块（JWT_SECRET）。
+
+#### 3.2 推送管道 + 断线缓冲
+
+| # | 子任务 | 产出 |
+|---|--------|------|
+| 3.2.1 | Event Bus → WS Gateway 桥接（订阅 message.* 事件 → 推送） | 事件驱动推送 |
+| 3.2.2 | 推送 scope 过滤（只推该 sales 负责的会话） | 精准推送 |
+| 3.2.3 | 断线缓冲：Redis Sorted Set 存储离线消息（TTL=5min） | 缓冲可用 |
+| 3.2.4 | 增量同步：`sync.request` 命令 → 返回 last_sync_seq 之后的消息 | 同步可用 |
+| 3.2.5 | Redis Pub/Sub fan-out（多实例横扩支持） | 多实例就绪 |
+
+**依赖关系：** 依赖 3.1（WS 核心）+ 2.2（Event Bus）。
+
+#### 3.3 ViewProjector 集成
+
+| # | 子任务 | 产出 |
+|---|--------|------|
+| 3.3.1 | 实现 ViewProjector 核心逻辑（策略读取 + 字段过滤） | 投影可用 |
+| 3.3.2 | 集成到 WS 推送管道（所有推送经过 ViewProjector） | WS 推送脱敏 |
+| 3.3.3 | 集成到 REST API 中间件（所有响应经过 ViewProjector） | API 响应脱敏 |
+| 3.3.4 | Redis 策略缓存 + `visibility.changed` 事件触发失效 | 缓存机制 |
+
+**依赖关系：** 依赖 3.1（WS 可用）+ 2.1（visibility_policies 表就绪）。
+
+#### 3.4 REST API 层
+
+| # | 子任务 | 产出 |
+|---|--------|------|
+| 3.4.1 | `POST /api/khub/messages/send`（出站发消息） | 发送 API |
+| 3.4.2 | `GET /api/khub/messages/history`（代理 Tracy /replay） | 历史 API |
+| 3.4.3 | 请求校验中间件（Trace ID、JWT、入参 schema） | 通用中间件 |
+| 3.4.4 | CORS 配置（允许 workbench.huidu.ai + admin.huidu.ai） | 跨域可用 |
+
+**依赖关系：** 依赖 3.3（ViewProjector）+ 2.3（Tracy Client）。
+
+#### 3.5 Plugin Config 集成
+
+| # | 子任务 | 产出 |
+|---|--------|------|
+| 3.5.1 | 实现 Plugin Config 拉取模块（GET /plugin/config/resolved → 过滤 khub.*） | 配置可读 |
+| 3.5.2 | 30s 轮询更新 + 变更检测 | 动态配置 |
+| 3.5.3 | 在 Tracy 本地源码中添加 khub.* 配置项 | 配置存在 |
+
+**依赖关系：** 依赖 2.3（Tracy Client）；与 3.1~3.4 可并行。
+
+#### Phase 3 执行顺序总览
+
+```
+Week 5:
+  3.1 WS Gateway 核心 ─────────────────────────────►
+  3.5 Plugin Config ───────────────────────────────► (与 3.1 并行)
+  3.2 推送管道 + 断线缓冲 ─────────────────────────► (依赖 3.1)
+
+Week 6:
+  3.3 ViewProjector 集成 ──────────────────────────► (依赖 3.1 + 3.2)
+  3.4 REST API 层 ─────────────────────────────────► (依赖 3.3)
+```
+
+**出口标准：** WS 建连鉴权通过；入站消息实时推送到客户端（经 ViewProjector 脱敏）；REST API 可发消息、查历史；断线重连后增量同步正常。
+
+---
 
 ### Phase 4：Visibility + Account Core + 收尾（第 7-8 周）
 
-| 任务 | 负责方 | 产出 |
-|------|--------|------|
-| Visibility Control 全套 | kHub | 策略/审计/ViewProjector/定时回收 |
-| Account Core（多账号 + 凭据加密 + 健康检查） | kHub | 账号管理可用 |
-| Tracy 实施 D-08（Admin SPA 加 2 Page） | Tracy | Visibility 管理 + Account Health Page |
-| Tracy 实施 D-03（RBAC visibility capability） | Tracy | 权限控制 |
-| 集成测试 + 压测 | kHub | 测试报告 |
-| 部署文档 + 上线手册 | kHub | 文档交付 |
-| 灰度计划协调 | kHub + Tracy | 灰度方案 |
+#### 4.1 Visibility Control 完整实现
 
-**出口标准：** 可见性策略实时生效（3 秒内），多账号同时在线，1-2 个真实业务员开始内测。
+| # | 子任务 | 产出 |
+|---|--------|------|
+| 4.1.1 | 策略 CRUD API：`GET/POST/DELETE /api/khub/visibility/policies` | API 可用 |
+| 4.1.2 | 审计日志 API：`GET /api/khub/visibility/audit-log` | 审计可查 |
+| 4.1.3 | 定时回收：每 60s 扫描过期策略 → 自动撤销 → 写审计日志 | 回收可用 |
+| 4.1.4 | 实时推送：策略变更 → `visibility.changed` 事件 → WS 推送 | 实时生效 |
+| 4.1.5 | 端到端验证：创建策略 → sales 3 秒内看到字段 → 撤销 → 字段消失 | E2E 通过 |
+
+**依赖关系：** 依赖 3.3（ViewProjector 已集成）+ 3.2（WS 推送管道）。
+
+#### 4.2 Account Core
+
+| # | 子任务 | 产出 |
+|---|--------|------|
+| 4.2.1 | 账号 CRUD API：`GET/POST/DELETE /api/khub/accounts` | API 可用 |
+| 4.2.2 | 连接管理 API：`POST /accounts/:id/connect`、`POST /accounts/:id/disconnect` | 连接控制 |
+| 4.2.3 | 事件历史 API：`GET /accounts/:id/events` | 事件可查 |
+| 4.2.4 | 凭据加密存储（AES-256-GCM，credentials_ref 引用） | 凭据安全 |
+| 4.2.5 | 健康检查：每 30s 轮询 ConnectorAdapter.getConnectionStatus | 健康监控 |
+| 4.2.6 | 自动重连：断连检测 → 指数退避重连 → 超阈值告警 | 自动恢复 |
+| 4.2.7 | `account.status_changed` 事件 → WS 推送 | 状态实时 |
+
+**依赖关系：** 依赖 1.4（ConnectorRegistry）+ 2.1（khub_accounts 表）+ 3.1（WS Gateway）。
+
+#### 4.3 Tracy 侧改造对接（CTO 推代码后）
+
+| # | 子任务 | 产出 |
+|---|--------|------|
+| 4.3.1 | 验证 D-03：RBAC grant_visibility_policy capability 生效 | 权限可用 |
+| 4.3.2 | 验证 D-08：Admin SPA Visibility 管理页可操作 | 管理页可用 |
+| 4.3.3 | 验证 D-08：Admin SPA Account Health 页可操作 | 管理页可用 |
+| 4.3.4 | 端到端：Admin 创建策略 → kHub API → WS 推送 → 工作台生效 | 全链路通 |
+
+**依赖关系：** 依赖 CTO 推代码 + 4.1/4.2 完成。
+
+#### 4.4 集成测试 + 质量收尾
+
+| # | 子任务 | 产出 |
+|---|--------|------|
+| 4.4.1 | 核心模块单元测试补全（message、visibility、ws 覆盖率 > 80%） | 测试报告 |
+| 4.4.2 | 集成测试：testcontainers 全链路（PG + Redis + mock Connector） | CI 绿灯 |
+| 4.4.3 | 压测：模拟 500 WS 并发 + 350 条/分钟消息吞吐 | 性能报告 |
+| 4.4.4 | 安全审查：JWT 校验、凭据加密、SQL 注入、XSS | 安全清单 |
+| 4.4.5 | 部署文档 + Docker Compose 生产配置 + 上线手册 | 文档交付 |
+
+**依赖关系：** 依赖 4.1 + 4.2 完成；4.4.3 可与 4.3 并行。
+
+#### Phase 4 执行顺序总览
+
+```
+Week 7:
+  4.1 Visibility Control ──────────────────────────►
+  4.2 Account Core ────────────────────────────────► (与 4.1 并行)
+
+Week 8:
+  4.3 Tracy 侧对接验证 ───────────────────────────► (依赖 CTO + 4.1/4.2)
+  4.4 集成测试 + 收尾 ────────────────────────────► (依赖 4.1 + 4.2)
+```
+
+**出口标准：** 可见性策略实时生效（3 秒内），多账号同时在线，核心模块测试覆盖率 > 80%，压测通过，1-2 个真实业务员开始内测。
 
 ---
 
@@ -768,12 +1048,10 @@ D 档改造由 Tracy 侧负责实施，kHub 侧提供需求规格和验收标准
 
 | 风险项 | 影响 | 概率 | 缓解措施 |
 |-------|------|------|---------|
-| Phase 1 数据层对齐拖延 | 全部 Phase 推迟 | 中 | D 档改造单 W1 末全部拍板，不拖延到 W2 |
-| TDLib Node.js 兼容性问题 | TG Connector 不可用 | 中 | Phase 1 优先验证；备选子进程隔离方案 |
-| 双轨期消息重复 | 旧扩展和新 Connector 同时 ingest | 中 | 禁止同一 sales 同时跑旧扩展和新 Connector |
-| Tracy 节奏不匹配 | D 档改造延迟 | 中 | 每周 30min 同步会，阻塞项及时升级 |
-| 历史数据迁移 | 切换后看不到旧消息 | 低 | 方案 C 不迁移，旧消息通过 Tracy /replay API 查 |
-| kHub 被 Tracy 限流 | 翻译/分析请求被拒 | 低 | Tracy 加白名单或为 kHub 设置单独限流桶 |
+| Phase 1 TDLib 验证失败 | TG Connector 不可用 | 中 | Phase 1 第一优先验证；备选：TDLib 独立 Docker 容器 + HTTP API 封装 |
+| Tracy 源码本地跑不通 | 数据层对接延迟 | 低 | CTO 提供 README / docker-compose，必要时远程协助 |
+| Tracy 节奏不匹配 | D 档改造延迟 | 中 | Phase 1-3 完全不依赖 Tracy 改造；Phase 4 才需要 D-03/D-08 |
+| kHub 被 Tracy 限流 | 翻译/分析请求被拒 | 低 | 本地部署无限流问题；生产环境加白名单或单独限流桶 |
 | WS 连接数超预期 | 内存/CPU 不足 | 低 | Redis Pub/Sub 支持多实例横扩 |
 | PostgreSQL 共享性能 | kHub 读写影响 Tracy | 低 | khub_ 前缀隔离，kHub 读写量远小于 Tracy |
 
@@ -781,15 +1059,15 @@ D 档改造由 Tracy 侧负责实施，kHub 侧提供需求规格和验收标准
 
 ## 13. 待对齐事项
 
-| # | 事项 | kHub 建议 | 需 Tracy 确认 |
-|---|------|----------|-------------|
-| 1 | Postgres 共享 vs 双库 | 共享（khub_ 前缀隔离） | Tracy 推荐？ |
-| 2 | message_raw 增强方案 | 方案 C（加字段不迁移） | Tracy 推荐 C，是否同意？ |
-| 3 | unified-contract 合并方向 | V1 EventEmitter 占位，等 spec | Tracy spec 预计什么时候出？ |
-| 4 | 历史数据切换日 | 旧扩展停采 + 新 Connector 上线同一天 | 业务方确认切换日 |
-| 5 | Tracy staging 环境 | 需要 baseUrl + 测试租户 + JWT_SECRET + PG/Redis 连接信息 | Tracy 何时提供？ |
-| 6 | Connector 接 Tracy TG/WA 的方式 | HTTP 还是 IPC？ | Tracy 侧偏好？ |
-| 7 | BullMQ 是否独立 | kHub 和 Tracy 各自独立 BullMQ | 确认无冲突 |
+| # | 事项 | 状态 | 结论 |
+|---|------|------|------|
+| 1 | Postgres 共享 vs 双库 | ✅ 已确认 | 共享（khub_ 前缀隔离） |
+| 2 | message_raw 增强方案 | ✅ 已确认 | 方案 C（加字段不迁移） |
+| 3 | unified-contract 合并方向 | ✅ 已关闭 | V1 单一消费方，不需要协议层 |
+| 4 | 历史数据切换日 | ✅ 已关闭 | 旧扩展只内测过、无客户使用，kHub V1 上线全员直接用 |
+| 5 | Tracy staging 环境 | ✅ 已关闭 | Clone Tracy 源码本地跑，不需要远程 staging |
+| 6 | Connector 接 Tracy TG/WA 的方式 | ✅ 已确认 | HTTP（与现有 Go:9800 风格一致） |
+| 7 | BullMQ 是否独立 | 待确认 | kHub 和 Tracy 各自独立 BullMQ，需确认无冲突 |
 
 ---
 

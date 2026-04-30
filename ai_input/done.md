@@ -146,3 +146,71 @@ Telegram桥接和WhatsApp的不同账号的桥接团队其它team已经完善，
 - 在文档开头生成一个目录（toc）
 
 ---
+基于plan_v1.2和已有的管理工作台，设计kHub_workbench_prd_v1(kHub 销售工作台产品文档V1)
+
+## 重要
+- 先输出markdown，再调用writing tool写入文档
+
+## 说明
+- 核心功能：
+    - 会话列表
+    - 对话详情（原文/译文切换）
+    - AI 分析侧栏
+    - 建议回复区
+    - 消息回放入口
+- 参考plan_v1.2：docs/v1/kHub_plan_v1-2.md
+- 参考已有管理工作台：ai_input/resources/dev_resources/handoff/B-keep-as-is/09-admin-spa-inventory.md
+- 包含详细的功能大纲、工作流、重点模块说明
+
+---
+
+基于plan_v1.2和已有的管理工作台，设计kHub_dashboard_ext_v1(管理看板扩展产品文档)
+
+## 重要
+- 先输出markdown，再调用writing tool写入文档
+
+## 说明
+- 参考plan_v1.2：docs/v1/kHub_plan_v1-2.md
+- 基于已有管理工作台：ai_input/resources/dev_resources/handoff/B-keep-as-is/09-admin-spa-inventory.md
+- 核心新增Visibility 管理 + Account Health功能
+- 包括功能模块，工作流、信息流等
+- 新增的模块由kHub提供api，需要包含功能模块对应的api调用说明
+
+--- 
+
+cto针对plan_v1.2给了反馈，看看需不需要再调整，然后帮我调整`9. 实施路线图`：
+## 反馈内容
+```
+后端这部分，我忙完直接推到github，你clone代码下来，直接查看源码复用可能比较好，这样不用依赖我这边的api，全部本地建。
+
+关于unified-contract和你的Agent Facade，这个阶段kHub 只服务销售工作台这个单一消费方，暂时不需要协议层。
+历史切换日不存在：旧扩展只是内测过、无客户使用，kHub V1 上线全员直接用。
+Postgres 共享 + message_raw 方案 C 都按你 v1.2 写的来
+connector接 TG/WA 走 HTTP（与现有 Go:9800 风格一致）。
+
+你可以先做 TDLib 验证 + Docker Compose 骨架 + ConnectorAdapter 接口，不依赖我。
+
+```
+
+基于已经生成的文档，帮我生成AGENTS.md，用于指导后续项目开发：
+
+## 重要
+- 当前项目是khub，销售工作台spa和管理后台spa作为独立项目会另起项目
+- AGENTS要聚焦项目维度的必要定义、约束、说明
+
+## 文档
+
+- 计划：docs/v1/kHub_plan_v1-2.md
+- 技术规格：docs/v1/kHub_plan_ts_v1.md
+- 数据和模型：docs/v1/kHub_data_model_v1.md
+- 销售工作台和管理后台（这两个是独立的spa项目，khub负责实现对应的api）：docs/v1/kHub_dashboard_ext_v1.md、docs/v1/kHub_workbench_prd_v1.md
+
+---
+
+细化 `9. 实施路线图` :
+
+## 说明
+- phase再细化为任务项，比如：1. TDLib Node.js 兼容性验证（Docker 容器内跑通收发消息），1.1 初始化项目
+- 再评估下phase下的任务有没有先后依赖顺序，若有适当调整
+
+---
