@@ -214,3 +214,29 @@ connector接 TG/WA 走 HTTP（与现有 Go:9800 风格一致）。
 - 再评估下phase下的任务有没有先后依赖顺序，若有适当调整
 
 ---
+根据cto反馈的任务对接分类，更新plan：
+
+- 先详细阅读反馈：ai_input/kHub_v1-2_任务对接分类.md
+- 当前plan：docs/v1/kHub_plan_v1-2.md
+- 先总结再待我确认更改
+
+--
+完成销售工作台客户端方案研究，最终输出一份独立的文档，不要修改plan：
+
+## 重要
+- 先输出markdown，再调用writing tool写入文档
+
+## 说明
+- 基于已有plan：docs/v1/kHub_plan_v1-2.md
+- 基于matrix的client，分析其各端实现技术栈，整理形成对比表格和推荐方案：
+    - element web/desktop：https://github.com/element-hq/element-web
+    - element x ios/android：https://github.com/element-hq/element-x-ios、https://github.com/element-hq/element-x-android
+    - element rust sdk: https://github.com/matrix-org/matrix-rust-sdk
+    - cinny: https://github.com/cinnyapp/cinny
+    - fluffychat：https://github.com/krille-chan/fluffychat
+- 需要考虑团队目前的技术基础设施
+- 需要考虑各个组件之间的调用、兼容性
+- 需要考虑最终产品的用户体验
+- 需要考虑核心场景（多渠道im信息整合、权限控制、审计等）
+
+---
