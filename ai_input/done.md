@@ -240,3 +240,11 @@ connector接 TG/WA 走 HTTP（与现有 Go:9800 风格一致）。
 - 需要考虑核心场景（多渠道im信息整合、权限控制、审计等）
 
 ---
+我目前为远程工作，CTO反馈了我在onsite前的工作安排
+
+- 根据已有的规划和反馈，帮我生成一份onsite前的一份独立的workbench-demo开发计划
+- cto反馈：ai_input/resources/kHub_Workbench_协作与对接说明_2026-05-05.md
+- plan: docs/v1/kHub_plan_v1-2.md
+- 销售工作台prd: docs/v1/kHub_workbench_prd_v1.md
+
+---
