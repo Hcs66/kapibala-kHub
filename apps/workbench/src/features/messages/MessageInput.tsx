@@ -1,0 +1,62 @@
+import { useState, useRef, useEffect } from 'react'
+import { Send } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
+
+interface MessageInputProps {
+  disabled?: boolean
+  onSend: (text: string) => void
+  onTextChange?: (text: string) => void
+  externalText?: string
+}
+
+export function MessageInput({ disabled, onSend, onTextChange, externalText }: MessageInputProps): React.ReactElement {
+  const { t } = useTranslation()
+  const [text, setText] = useState('')
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    if (!disabled) {
+      inputRef.current?.focus()
+    }
+  }, [disabled])
+
+  useEffect(() => {
+    if (externalText !== undefined && externalText !== text) {
+      setText(externalText)
+    }
+  }, [externalText])
+
+  const handleSubmit = (e: React.FormEvent): void => {
+    e.preventDefault()
+    const trimmed = text.trim()
+    if (!trimmed) return
+    onSend(trimmed)
+    setText('')
+    onTextChange?.('')
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="flex gap-2 border-t border-border p-3">
+      <input
+        ref={inputRef}
+        type="text"
+        value={text}
+        onChange={(e) => {
+          setText(e.target.value)
+          onTextChange?.(e.target.value)
+        }}
+        placeholder={disabled ? t('message.inputDisabledPlaceholder') : t('message.inputPlaceholder')}
+        disabled={disabled}
+        className="flex-1 rounded-md border border-border bg-surface-container-lowest px-3 py-2 text-sm outline-none transition-shadow focus:border-primary focus:ring-2 focus:ring-primary-glow disabled:opacity-50"
+      />
+      <button
+        type="submit"
+        disabled={disabled || !text.trim()}
+        className="flex items-center gap-1.5 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary-dim disabled:opacity-50"
+      >
+        <Send className="h-4 w-4" />
+        {t('common.send')}
+      </button>
+    </form>
+  )
+}
