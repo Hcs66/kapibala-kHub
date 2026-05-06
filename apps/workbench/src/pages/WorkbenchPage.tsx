@@ -15,6 +15,15 @@ import type { MessageDTO, AnalysisSummaryDTO, AccountStatusDTO, ServerPushEvent 
 import type { WsConnectionStatus } from '@/shared/ws/client'
 import type { SuggestedReply } from '@/mocks/data'
 
+function getWsOptions(): { simulateDisconnect?: boolean; disconnectAfterMs?: number; reconnectAfterMs?: number } {
+  const params = new URLSearchParams(window.location.search)
+  const scenario = params.get('scenario')
+  if (scenario === 'timeout') {
+    return { simulateDisconnect: true, disconnectAfterMs: 8_000, reconnectAfterMs: 3_000 }
+  }
+  return {}
+}
+
 export function WorkbenchPage(): React.ReactElement {
   const conversations = useConversationStore((s) => s.conversations)
   const currentId = useConversationStore((s) => s.currentConversationId)
@@ -46,7 +55,7 @@ export function WorkbenchPage(): React.ReactElement {
   const [inputText, setInputText] = useState('')
   const [suggestedReplies, setSuggestedReplies] = useState<SuggestedReply[]>([])
 
-  const wsRef = useRef(createMockWs())
+  const wsRef = useRef(createMockWs(getWsOptions()))
 
   useEffect(() => {
     setConversationLoading(true)

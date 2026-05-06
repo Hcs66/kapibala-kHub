@@ -14,11 +14,16 @@ import type {
   AccountStatusDTO,
   CurrentUserDTO,
 } from './types'
-import { mockConversations, mockMessages, mockAccounts, mockAnalysis, mockHistoryMessages, mockSuggestedReplies } from '@/mocks/data'
-import type { SuggestedReply } from '@/mocks/data'
+import { mockConversations, mockMessages, mockAccounts, mockAccountsDisconnected, mockAnalysis, mockHistoryMessages, mockSuggestedReplies } from '@/mocks/data'
+import type { SuggestedReply, MockScenario } from '@/mocks/data'
 
 function delay(ms: number): Promise<void> {
   return new Promise((r) => setTimeout(r, ms))
+}
+
+function getScenario(): MockScenario {
+  const params = new URLSearchParams(window.location.search)
+  return (params.get('scenario') as MockScenario) ?? 'normal'
 }
 
 export interface MockClientExtended extends WorkbenchApi {
@@ -46,6 +51,11 @@ export const mockClient: MockClientExtended = {
   },
 
   async getCurrentUser(): Promise<CurrentUserDTO> {
+    const scenario = getScenario()
+    if (scenario === 'error') {
+      await delay(200)
+      throw new Error('KHUB_AUTH_REQUIRED')
+    }
     await delay(200)
     return {
       tenantId: 'tenant_001',
@@ -59,6 +69,15 @@ export const mockClient: MockClientExtended = {
   },
 
   async listConversations(input: ConversationListQuery): Promise<ConversationListResult> {
+    const scenario = getScenario()
+    if (scenario === 'empty') {
+      await delay(300)
+      return { conversations: [], total: 0, hasMore: false }
+    }
+    if (scenario === 'error') {
+      await delay(300)
+      throw new Error('KHUB_AUTH_REQUIRED')
+    }
     await delay(300)
     let filtered = [...mockConversations]
 
@@ -78,6 +97,11 @@ export const mockClient: MockClientExtended = {
   },
 
   async listMessages(input: MessageHistoryQuery): Promise<MessageHistoryResult> {
+    const scenario = getScenario()
+    if (scenario === 'empty') {
+      await delay(400)
+      return { messages: [], hasMore: false }
+    }
     await delay(400)
     const messages = mockMessages[input.conversationId] ?? []
     if (input.beforeSeq) {
@@ -111,7 +135,12 @@ export const mockClient: MockClientExtended = {
   },
 
   async translatePreview(input: TranslatePreviewRequest): Promise<TranslatePreviewResult> {
-    await delay(800)
+    const scenario = getScenario()
+    const translateDelay = scenario === 'timeout' ? 4000 : 800
+    await delay(translateDelay)
+    if (scenario === 'timeout' && Math.random() < 0.3) {
+      throw new Error('翻译服务超时，请稍后重试')
+    }
     const fakeTranslations: Record<string, string> = {
       ru: `[RU] ${input.text}`,
       en: `[EN] ${input.text}`,
@@ -136,7 +165,11 @@ export const mockClient: MockClientExtended = {
   },
 
   async listAccounts(): Promise<AccountStatusDTO[]> {
+    const scenario = getScenario()
     await delay(200)
+    if (scenario === 'timeout') {
+      return mockAccountsDisconnected
+    }
     return mockAccounts
   },
 

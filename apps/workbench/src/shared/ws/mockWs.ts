@@ -20,11 +20,19 @@ const MOCK_INBOUND_MESSAGES = [
   },
 ]
 
-export function createMockWs(): WorkbenchWs {
+export interface MockWsOptions {
+  simulateDisconnect?: boolean
+  disconnectAfterMs?: number
+  reconnectAfterMs?: number
+}
+
+export function createMockWs(options: MockWsOptions = {}): WorkbenchWs {
   let status: WsConnectionStatus = 'disconnected'
   const statusHandlers: Array<(s: WsConnectionStatus) => void> = []
   const eventHandlers: WsEventHandler[] = []
   let intervalId: ReturnType<typeof setInterval> | null = null
+  let disconnectTimerId: ReturnType<typeof setTimeout> | null = null
+  let reconnectTimerId: ReturnType<typeof setTimeout> | null = null
 
   function setStatus(newStatus: WsConnectionStatus): void {
     status = newStatus
@@ -54,6 +62,38 @@ export function createMockWs(): WorkbenchWs {
             })
           }
         }, 15_000)
+
+        if (options.simulateDisconnect) {
+          const disconnectDelay = options.disconnectAfterMs ?? 10_000
+          disconnectTimerId = setTimeout(() => {
+            if (intervalId) {
+              clearInterval(intervalId)
+              intervalId = null
+            }
+            setStatus('disconnected')
+
+            const reconnectDelay = options.reconnectAfterMs ?? 5_000
+            setTimeout(() => {
+              setStatus('reconnecting')
+              reconnectTimerId = setTimeout(() => {
+                setStatus('connected')
+                intervalId = setInterval(() => {
+                  const evt = MOCK_INBOUND_MESSAGES[0]
+                  if (evt) {
+                    emitEvent({
+                      ...evt,
+                      payload: {
+                        ...evt.payload,
+                        messageId: `mock_inbound_${Date.now()}`,
+                        createdAtMs: Date.now(),
+                      },
+                    })
+                  }
+                }, 15_000)
+              }, 2_000)
+            }, reconnectDelay)
+          }, disconnectDelay)
+        }
       }, 500)
     },
 
@@ -61,6 +101,14 @@ export function createMockWs(): WorkbenchWs {
       if (intervalId) {
         clearInterval(intervalId)
         intervalId = null
+      }
+      if (disconnectTimerId) {
+        clearTimeout(disconnectTimerId)
+        disconnectTimerId = null
+      }
+      if (reconnectTimerId) {
+        clearTimeout(reconnectTimerId)
+        reconnectTimerId = null
       }
       setStatus('disconnected')
     },

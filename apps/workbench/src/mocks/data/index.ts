@@ -5,6 +5,8 @@ export interface SuggestedReply {
   text: string
 }
 
+export type MockScenario = 'normal' | 'empty' | 'error' | 'timeout'
+
 const now = Date.now()
 const minute = 60_000
 const hour = 3_600_000
@@ -283,6 +285,24 @@ export const mockAccounts: AccountStatusDTO[] = [
     platform: 'whatsapp',
     displayName: 'WA 销售号1',
     status: 'connected',
+    lastActiveAtMs: now - 60_000,
+  },
+]
+
+export const mockAccountsDisconnected: AccountStatusDTO[] = [
+  {
+    accountId: 'acc_tg_01',
+    platform: 'telegram',
+    displayName: 'TG 销售号1',
+    status: 'disconnected',
+    lastActiveAtMs: now - 120_000,
+    errorMessage: 'Session expired, please re-login',
+  },
+  {
+    accountId: 'acc_wa_01',
+    platform: 'whatsapp',
+    displayName: 'WA 销售号1',
+    status: 'reconnecting',
     lastActiveAtMs: now - 60_000,
   },
 ]
