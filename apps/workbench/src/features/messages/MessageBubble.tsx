@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Check, CheckCheck, X, Loader2, RotateCcw } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import type { MessageDTO } from '@/shared/api/types'
 
 interface MessageBubbleProps {
@@ -31,6 +32,7 @@ function formatMessageTime(ms: number): string {
 }
 
 export function MessageBubble({ message, showTranslation, onRetry }: MessageBubbleProps): React.ReactElement {
+  const { t } = useTranslation()
   const [localShowTranslated, setLocalShowTranslated] = useState<boolean | null>(null)
   const isOutbound = message.direction === 'outbound'
   const hasTranslation = Boolean(message.translatedText)
@@ -70,7 +72,7 @@ export function MessageBubble({ message, showTranslation, onRetry }: MessageBubb
         <div className={`mt-1 flex items-center gap-1 ${isOutbound ? 'justify-end' : 'justify-start'}`}>
           {hasTranslation && (
             <span className={`text-xs ${isOutbound ? 'opacity-60' : 'text-muted-foreground opacity-70'}`}>
-              {effectiveShowTranslation ? '译' : '原'}
+              {effectiveShowTranslation ? t('message.showTranslation') : t('message.showOriginal')}
             </span>
           )}
           <span className="text-xs opacity-60">{formatMessageTime(message.createdAtMs)}</span>
@@ -85,7 +87,7 @@ export function MessageBubble({ message, showTranslation, onRetry }: MessageBubb
               className="ml-1 flex items-center gap-0.5 rounded px-1.5 py-0.5 text-xs text-destructive hover:bg-destructive/10"
             >
               <RotateCcw className="h-3 w-3" />
-              重试
+              {t('common.retry')}
             </button>
           )}
         </div>
@@ -99,6 +101,7 @@ interface TimeSeparatorProps {
 }
 
 export function TimeSeparator({ timestamp }: TimeSeparatorProps): React.ReactElement {
+  const { t } = useTranslation()
   const date = new Date(timestamp)
   const now = new Date()
   const isToday = date.toDateString() === now.toDateString()
@@ -110,7 +113,7 @@ export function TimeSeparator({ timestamp }: TimeSeparatorProps): React.ReactEle
   if (isToday) {
     label = formatMessageTime(timestamp)
   } else if (isYesterday) {
-    label = `昨天 ${formatMessageTime(timestamp)}`
+    label = `${t('conversation.yesterday')} ${formatMessageTime(timestamp)}`
   } else {
     label = `${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${formatMessageTime(timestamp)}`
   }

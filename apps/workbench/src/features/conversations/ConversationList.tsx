@@ -1,4 +1,5 @@
 import { MessageSquare } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import type { ConversationDTO } from '@/shared/api/types'
 
 interface ConversationItemProps {
@@ -25,19 +26,20 @@ function PlatformIcon({ platform }: { platform: string }): React.ReactElement {
   )
 }
 
-function formatTime(ms: number): string {
+function formatTime(ms: number, t: (key: string, opts?: Record<string, unknown>) => string): string {
   const diff = Date.now() - ms
   const minutes = Math.floor(diff / 60_000)
-  if (minutes < 1) return '刚刚'
-  if (minutes < 60) return `${String(minutes)}分钟前`
+  if (minutes < 1) return t('conversation.justNow')
+  if (minutes < 60) return t('conversation.minutesAgo', { count: minutes })
   const hours = Math.floor(minutes / 60)
-  if (hours < 24) return `${String(hours)}小时前`
+  if (hours < 24) return t('conversation.hoursAgo', { count: hours })
   const days = Math.floor(hours / 24)
-  if (days === 1) return '昨天'
-  return `${String(days)}天前`
+  if (days === 1) return t('conversation.yesterday')
+  return t('conversation.daysAgo', { count: days })
 }
 
 export function ConversationItem({ conversation, isActive, onClick }: ConversationItemProps): React.ReactElement {
+  const { t } = useTranslation()
   return (
     <button
       type="button"
@@ -51,7 +53,7 @@ export function ConversationItem({ conversation, isActive, onClick }: Conversati
         <div className="flex items-center justify-between">
           <span className="truncate text-[13px] font-medium">{conversation.customerDisplayName}</span>
           <span className="shrink-0 text-[11px] text-on-surface-variant">
-            {formatTime(conversation.lastMessageAtMs)}
+            {formatTime(conversation.lastMessageAtMs, t)}
           </span>
         </div>
         <div className="flex items-center justify-between">
@@ -76,11 +78,12 @@ interface ConversationListProps {
 }
 
 export function ConversationList({ conversations, currentId, onSelect }: ConversationListProps): React.ReactElement {
+  const { t } = useTranslation()
   if (conversations.length === 0) {
     return (
       <div className="flex flex-1 flex-col items-center justify-center gap-2 p-4">
         <MessageSquare className="h-8 w-8 text-muted-foreground" />
-        <p className="text-sm text-muted-foreground">暂无会话</p>
+        <p className="text-sm text-muted-foreground">{t('conversation.empty')}</p>
       </div>
     )
   }

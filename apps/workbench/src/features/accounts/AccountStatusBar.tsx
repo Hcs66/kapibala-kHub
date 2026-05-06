@@ -1,11 +1,13 @@
 import type { AccountStatusDTO } from '@/shared/api/types'
 import { Wifi, WifiOff, Loader2, AlertCircle } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 interface AccountStatusBarProps {
   accounts: AccountStatusDTO[]
 }
 
 export function AccountStatusBar({ accounts }: AccountStatusBarProps): React.ReactElement | null {
+  const { t } = useTranslation()
   const disconnected = accounts.filter((a) => a.status !== 'connected')
   if (disconnected.length === 0) return null
 
@@ -16,9 +18,9 @@ export function AccountStatusBar({ accounts }: AccountStatusBarProps): React.Rea
           <StatusIcon status={account.status} />
           <span className="font-medium text-on-error-container">{account.displayName}</span>
           <span className="text-on-error-container/70">
-            {account.status === 'disconnected' && '已断连'}
-            {account.status === 'reconnecting' && '重连中...'}
-            {account.status === 'error' && (account.errorMessage ?? '连接错误')}
+            {account.status === 'disconnected' && t('account.disconnected')}
+            {account.status === 'reconnecting' && t('account.reconnecting')}
+            {account.status === 'error' && (account.errorMessage ?? t('account.connectionError'))}
           </span>
         </div>
       ))}

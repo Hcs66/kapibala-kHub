@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { Send } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 interface MessageInputProps {
   disabled?: boolean
@@ -9,6 +10,7 @@ interface MessageInputProps {
 }
 
 export function MessageInput({ disabled, onSend, onTextChange, externalText }: MessageInputProps): React.ReactElement {
+  const { t } = useTranslation()
   const [text, setText] = useState('')
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -43,7 +45,7 @@ export function MessageInput({ disabled, onSend, onTextChange, externalText }: M
           setText(e.target.value)
           onTextChange?.(e.target.value)
         }}
-        placeholder={disabled ? '选择会话后开始聊天' : '输入消息...'}
+        placeholder={disabled ? t('message.inputDisabledPlaceholder') : t('message.inputPlaceholder')}
         disabled={disabled}
         className="flex-1 rounded-md border border-border bg-surface-container-lowest px-3 py-2 text-sm outline-none transition-shadow focus:border-primary focus:ring-2 focus:ring-primary-glow disabled:opacity-50"
       />
@@ -53,7 +55,7 @@ export function MessageInput({ disabled, onSend, onTextChange, externalText }: M
         className="flex items-center gap-1.5 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary-dim disabled:opacity-50"
       >
         <Send className="h-4 w-4" />
-        发送
+        {t('common.send')}
       </button>
     </form>
   )

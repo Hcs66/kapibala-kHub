@@ -41,6 +41,7 @@ kapibala-kHub/                  # monorepo root
 | Data Fetching | TanStack Query (React Query) |
 | Virtual Scroll | @tanstack/virtual |
 | Routing | React Router v7 |
+| i18n | i18next + react-i18next |
 | WebSocket | Native WebSocket + custom reconnect |
 | Package Manager | pnpm |
 
@@ -88,6 +89,19 @@ kapibala-kHub/                  # monorepo root
 - 不写自定义 CSS 文件，除非 Tailwind 无法表达（如 keyframes）
 - 响应式断点：`sm:640px` / `md:768px` / `lg:1024px` / `xl:1280px`
 
+### i18n (i18next + react-i18next)
+
+- 配置入口：`src/shared/i18n/index.ts`，在 `main.tsx` 中 import 初始化
+- 翻译资源：`src/shared/i18n/zh.ts`（默认）、`src/shared/i18n/en.ts`
+- 语言切换：`changeLanguage(lang)` 函数，同时持久化到 `localStorage('workbench_lang')`
+- 组件中使用：`const { t } = useTranslation()` + `t('namespace.key')`
+- 翻译 key 结构按功能域划分：`common`、`auth`、`workbench`、`conversation`、`message`、`translate`、`analysis`、`account`、`ws`
+- 插值语法：`{{count}}`（如 `t('message.newMessages', { count: 5 })`）
+- **规则：**
+  - 所有面向用户的文本必须走 `t()` 调用，不允许硬编码中文/英文字符串
+  - 新增功能时同步更新 `zh.ts` 和 `en.ts`
+  - Mock 数据中的展示文本（如用户名 `'张三'`）不需要 i18n 化
+
 ### File Organization
 
 ```
@@ -103,6 +117,7 @@ src/
   shared/
     api/            # API adapter 层（mock/real 切换）
     ws/             # WebSocket adapter 层
+    i18n/           # 国际化配置与翻译资源
     ui/             # 通用 UI 组件
     utils/          # 工具函数
   stores/           # Zustand stores

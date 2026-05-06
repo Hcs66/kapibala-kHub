@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { useVirtualizer } from '@tanstack/react-virtual'
 import { Languages, MessageSquare, ChevronDown, Loader2 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import type { MessageDTO } from '@/shared/api/types'
 import { MessageBubble, TimeSeparator } from './MessageBubble'
 import { MessageSkeleton } from './MessageSkeleton'
@@ -33,6 +34,7 @@ export function MessagePanel({
   loading,
   conversationName,
 }: MessagePanelProps): React.ReactElement {
+  const { t } = useTranslation()
   const parentRef = useRef<HTMLDivElement>(null)
   const [isAtBottom, setIsAtBottom] = useState(true)
   const [newMessageCount, setNewMessageCount] = useState(0)
@@ -110,7 +112,7 @@ export function MessagePanel({
     return (
       <div className="flex flex-1 flex-col items-center justify-center gap-3">
         <MessageSquare className="h-12 w-12 text-muted-foreground/50" />
-        <p className="text-sm text-muted-foreground">选择一个会话开始聊天</p>
+        <p className="text-sm text-muted-foreground">{t('message.selectConversation')}</p>
       </div>
     )
   }
@@ -129,7 +131,7 @@ export function MessagePanel({
           }`}
         >
           <Languages className="h-3.5 w-3.5" />
-          {showTranslation ? '查看原文' : '查看译文'}
+          {showTranslation ? t('message.showOriginal') : t('message.showTranslation')}
         </button>
       </div>
 
@@ -141,7 +143,7 @@ export function MessagePanel({
         {loadingMore && (
           <div className="flex items-center justify-center py-3">
             <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-            <span className="ml-2 text-xs text-muted-foreground">加载历史消息...</span>
+            <span className="ml-2 text-xs text-muted-foreground">{t('message.loadingMore')}</span>
           </div>
         )}
         <div
@@ -149,6 +151,7 @@ export function MessagePanel({
         >
           {virtualizer.getVirtualItems().map((virtualItem) => {
             const msg = messages[virtualItem.index]
+            if (!msg) return null
             const prev = virtualItem.index > 0 ? messages[virtualItem.index - 1] : undefined
             return (
               <div
@@ -182,7 +185,7 @@ export function MessagePanel({
           className="absolute bottom-4 left-1/2 z-10 flex -translate-x-1/2 items-center gap-1.5 rounded-full bg-primary px-4 py-2 text-xs font-medium text-primary-foreground shadow-lg transition-all hover:bg-primary/90"
         >
           <ChevronDown className="h-3.5 w-3.5" />
-          有新消息 ({newMessageCount})
+          {t('message.newMessages', { count: newMessageCount })}
         </button>
       )}
     </div>

@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback, useRef } from 'react'
-import { Search, Filter } from 'lucide-react'
+import { Search, Filter, Globe } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { useConversationStore } from '@/stores/conversationStore'
 import { useMessageStore } from '@/stores/messageStore'
 import { ConversationList } from '@/features/conversations/ConversationList'
@@ -11,6 +12,7 @@ import { TranslatePreview } from '@/features/translate/TranslatePreview'
 import { ConversationSkeleton } from '@/features/messages/MessageSkeleton'
 import { mockClient } from '@/shared/api/mockClient'
 import { createMockWs } from '@/shared/ws/mockWs'
+import { changeLanguage } from '@/shared/i18n'
 import type { MessageDTO, AnalysisSummaryDTO, AccountStatusDTO, ServerPushEvent } from '@/shared/api/types'
 import type { WsConnectionStatus } from '@/shared/ws/client'
 import type { SuggestedReply } from '@/mocks/data'
@@ -25,6 +27,7 @@ function getWsOptions(): { simulateDisconnect?: boolean; disconnectAfterMs?: num
 }
 
 export function WorkbenchPage(): React.ReactElement {
+  const { t, i18n } = useTranslation()
   const conversations = useConversationStore((s) => s.conversations)
   const currentId = useConversationStore((s) => s.currentConversationId)
   const conversationLoading = useConversationStore((s) => s.loading)
@@ -193,17 +196,25 @@ export function WorkbenchPage(): React.ReactElement {
     <div className="flex h-svh flex-col">
       {wsStatus !== 'connected' && (
         <div className="flex items-center justify-center bg-error-container px-4 py-1.5 text-xs text-on-error-container">
-          {wsStatus === 'connecting' && '正在连接...'}
-          {wsStatus === 'disconnected' && '连接已断开，尝试重连中...'}
-          {wsStatus === 'reconnecting' && '重连中...'}
+          {wsStatus === 'connecting' && t('ws.connecting')}
+          {wsStatus === 'disconnected' && t('ws.disconnected')}
+          {wsStatus === 'reconnecting' && t('ws.reconnecting')}
         </div>
       )}
       <AccountStatusBar accounts={accounts} />
 
       <div className="flex flex-1 overflow-hidden">
         <aside className="hidden w-64 shrink-0 flex-col border-r border-border bg-white/78 backdrop-blur-[16px] md:flex">
-          <div className="flex h-12 items-center border-b border-border px-4">
-            <span className="text-sm font-semibold">kHub 工作台</span>
+          <div className="flex h-12 items-center justify-between border-b border-border px-4">
+            <span className="text-sm font-semibold">{t('workbench.title')}</span>
+            <button
+              type="button"
+              onClick={() => changeLanguage(i18n.language === 'zh' ? 'en' : 'zh')}
+              className="flex items-center gap-1 rounded-md px-2 py-1 text-xs text-muted-foreground transition-colors hover:bg-accent"
+            >
+              <Globe className="h-3.5 w-3.5" />
+              {i18n.language === 'zh' ? 'EN' : '中'}
+            </button>
           </div>
 
           <div className="flex flex-col gap-2 border-b border-border p-3">
@@ -213,7 +224,7 @@ export function WorkbenchPage(): React.ReactElement {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="搜索会话..."
+                placeholder={t('workbench.searchPlaceholder')}
                 className="flex-1 bg-transparent text-xs outline-none placeholder:text-muted-foreground"
               />
             </div>
@@ -224,7 +235,7 @@ export function WorkbenchPage(): React.ReactElement {
                 onChange={(e) => setPlatformFilter(e.target.value)}
                 className="flex-1 rounded-md border border-border bg-surface-container-lowest px-2 py-1 text-xs outline-none focus:border-primary focus:ring-2 focus:ring-primary-glow"
               >
-                <option value="">全部平台</option>
+                <option value="">{t('common.allPlatforms')}</option>
                 <option value="telegram">Telegram</option>
                 <option value="whatsapp">WhatsApp</option>
               </select>
@@ -273,7 +284,7 @@ export function WorkbenchPage(): React.ReactElement {
 
         <aside className="hidden w-80 shrink-0 flex-col border-l border-border bg-white/78 backdrop-blur-[16px] lg:flex">
           <div className="flex h-12 items-center border-b border-border px-4">
-            <span className="text-sm font-semibold">AI 分析</span>
+            <span className="text-sm font-semibold">{t('workbench.aiAnalysis')}</span>
           </div>
           <AnalysisSidebar
             analysis={analysis}

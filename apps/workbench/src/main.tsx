@@ -1,5 +1,6 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
+import '@/shared/i18n'
 import { WorkbenchApp } from '@/app/WorkbenchApp'
 import './index.css'
 

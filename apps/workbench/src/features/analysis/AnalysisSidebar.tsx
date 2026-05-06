@@ -1,5 +1,6 @@
 import type { AnalysisSummaryDTO } from '@/shared/api/types'
 import { Brain, Lightbulb, AlertTriangle, ArrowRight, MessageCircle } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import type { SuggestedReply } from '@/mocks/data'
 
 interface AnalysisSidebarProps {
@@ -10,10 +11,11 @@ interface AnalysisSidebarProps {
 }
 
 export function AnalysisSidebar({ analysis, loading, suggestedReplies, onSuggestedReplyClick }: AnalysisSidebarProps): React.ReactElement {
+  const { t } = useTranslation()
   if (loading) {
     return (
       <div className="flex flex-1 items-center justify-center">
-        <p className="text-xs text-muted-foreground">加载分析中...</p>
+        <p className="text-xs text-muted-foreground">{t('analysis.loadingAnalysis')}</p>
       </div>
     )
   }
@@ -22,7 +24,7 @@ export function AnalysisSidebar({ analysis, loading, suggestedReplies, onSuggest
     return (
       <div className="flex flex-1 flex-col items-center justify-center gap-2 p-4">
         <Brain className="h-8 w-8 text-muted-foreground" />
-        <p className="text-xs text-muted-foreground">选择会话后显示分析结果</p>
+        <p className="text-xs text-muted-foreground">{t('analysis.selectToShow')}</p>
       </div>
     )
   }
@@ -31,13 +33,13 @@ export function AnalysisSidebar({ analysis, loading, suggestedReplies, onSuggest
     <div className="flex flex-1 flex-col gap-4 overflow-y-auto p-4">
       {analysis.stage && (
         <div className="rounded-lg bg-ai-tint p-3">
-          <p className="mb-1 text-xs font-medium tracking-wide text-muted-foreground">销售阶段</p>
+          <p className="mb-1 text-xs font-medium tracking-wide text-muted-foreground">{t('analysis.stage')}</p>
           <p className="text-sm font-medium">{analysis.stage}</p>
         </div>
       )}
 
       <div>
-        <p className="mb-1.5 text-xs font-medium tracking-wide text-muted-foreground">会话摘要</p>
+        <p className="mb-1.5 text-xs font-medium tracking-wide text-muted-foreground">{t('analysis.summary')}</p>
         <p className="text-sm leading-relaxed">{analysis.summary}</p>
       </div>
 
@@ -45,7 +47,7 @@ export function AnalysisSidebar({ analysis, loading, suggestedReplies, onSuggest
         <div className="flex items-start gap-2 rounded-lg bg-ai-tint p-3">
           <Lightbulb className="mt-0.5 h-4 w-4 shrink-0 text-amber-500" />
           <div>
-            <p className="text-xs font-medium tracking-wide text-muted-foreground">信任度</p>
+            <p className="text-xs font-medium tracking-wide text-muted-foreground">{t('analysis.trust')}</p>
             <p className="text-sm">{analysis.trust}</p>
           </div>
         </div>
@@ -55,7 +57,7 @@ export function AnalysisSidebar({ analysis, loading, suggestedReplies, onSuggest
         <div className="flex items-start gap-2 rounded-lg bg-ai-tint p-3">
           <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-orange-500" />
           <div>
-            <p className="text-xs font-medium tracking-wide text-muted-foreground">关注点</p>
+            <p className="text-xs font-medium tracking-wide text-muted-foreground">{t('analysis.concern')}</p>
             <p className="text-sm">{analysis.concern}</p>
           </div>
         </div>
@@ -65,7 +67,7 @@ export function AnalysisSidebar({ analysis, loading, suggestedReplies, onSuggest
         <div className="flex items-start gap-2 rounded-lg bg-ai-tint p-3">
           <ArrowRight className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
           <div>
-            <p className="text-xs font-medium tracking-wide text-muted-foreground">建议动作</p>
+            <p className="text-xs font-medium tracking-wide text-muted-foreground">{t('analysis.nextAction')}</p>
             <p className="text-sm">{analysis.nextAction}</p>
           </div>
         </div>
@@ -75,7 +77,7 @@ export function AnalysisSidebar({ analysis, loading, suggestedReplies, onSuggest
         <div>
           <div className="mb-2 flex items-center gap-1.5">
             <MessageCircle className="h-3.5 w-3.5 text-primary" />
-            <p className="text-xs font-medium tracking-wide text-muted-foreground">建议回复</p>
+            <p className="text-xs font-medium tracking-wide text-muted-foreground">{t('analysis.suggestedReplies')}</p>
           </div>
           <div className="flex flex-col gap-2">
             {suggestedReplies.map((reply) => (
@@ -94,7 +96,7 @@ export function AnalysisSidebar({ analysis, loading, suggestedReplies, onSuggest
 
       {analysis.evidenceRefs.length > 0 && (
         <div>
-          <p className="mb-1.5 text-xs font-medium tracking-wide text-muted-foreground">依据</p>
+          <p className="mb-1.5 text-xs font-medium tracking-wide text-muted-foreground">{t('analysis.evidence')}</p>
           <div className="flex flex-col gap-1.5">
             {analysis.evidenceRefs.map((ref) => (
               <div key={ref.messageId} className="rounded-md border border-border bg-surface-container-low px-2.5 py-1.5">

@@ -1,4 +1,4 @@
-import type { ServerPushEvent } from './types'
+import type { ServerPushEvent } from '@/shared/api/types'
 
 export type WsConnectionStatus = 'connecting' | 'connected' | 'disconnected' | 'reconnecting'
 
