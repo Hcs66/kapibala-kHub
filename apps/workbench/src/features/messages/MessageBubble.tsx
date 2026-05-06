@@ -1,9 +1,10 @@
-import { Clock, Check, CheckCheck, X, Loader2 } from 'lucide-react'
+import { Check, CheckCheck, X, Loader2, RotateCcw } from 'lucide-react'
 import type { MessageDTO } from '@/shared/api/types'
 
 interface MessageBubbleProps {
   message: MessageDTO
   showTranslation: boolean
+  onRetry?: (messageId: string) => void
 }
 
 function StatusIcon({ status }: { status?: MessageDTO['status'] }): React.ReactElement | null {
@@ -28,7 +29,7 @@ function formatMessageTime(ms: number): string {
   return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`
 }
 
-export function MessageBubble({ message, showTranslation }: MessageBubbleProps): React.ReactElement {
+export function MessageBubble({ message, showTranslation, onRetry }: MessageBubbleProps): React.ReactElement {
   const isOutbound = message.direction === 'outbound'
   const displayText = showTranslation && message.translatedText
     ? message.translatedText
@@ -39,7 +40,9 @@ export function MessageBubble({ message, showTranslation }: MessageBubbleProps):
       <div
         className={`max-w-[70%] rounded-lg px-3 py-2 ${
           isOutbound
-            ? 'bg-primary text-primary-foreground'
+            ? message.status === 'failed'
+              ? 'bg-destructive/10 text-foreground'
+              : 'bg-primary text-primary-foreground'
             : 'bg-muted text-foreground'
         }`}
       >
@@ -52,6 +55,16 @@ export function MessageBubble({ message, showTranslation }: MessageBubbleProps):
         <div className={`mt-1 flex items-center gap-1 ${isOutbound ? 'justify-end' : 'justify-start'}`}>
           <span className="text-xs opacity-60">{formatMessageTime(message.createdAtMs)}</span>
           {isOutbound && <StatusIcon status={message.status} />}
+          {message.status === 'failed' && onRetry && (
+            <button
+              type="button"
+              onClick={() => onRetry(message.messageId)}
+              className="ml-1 flex items-center gap-0.5 rounded px-1.5 py-0.5 text-xs text-destructive hover:bg-destructive/10"
+            >
+              <RotateCcw className="h-3 w-3" />
+              重试
+            </button>
+          )}
         </div>
       </div>
     </div>

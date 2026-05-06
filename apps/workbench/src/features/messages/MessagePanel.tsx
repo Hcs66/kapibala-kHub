@@ -7,6 +7,7 @@ interface MessagePanelProps {
   messages: MessageDTO[]
   showTranslation: boolean
   onToggleTranslation: () => void
+  onRetry?: (messageId: string) => void
   conversationName?: string
 }
 
@@ -19,6 +20,7 @@ export function MessagePanel({
   messages,
   showTranslation,
   onToggleTranslation,
+  onRetry,
   conversationName,
 }: MessagePanelProps): React.ReactElement {
   const bottomRef = useRef<HTMLDivElement>(null)
@@ -61,7 +63,7 @@ export function MessagePanel({
               {shouldShowTimeSeparator(msg, messages[i - 1]) && (
                 <TimeSeparator timestamp={msg.createdAtMs} />
               )}
-              <MessageBubble message={msg} showTranslation={showTranslation} />
+              <MessageBubble message={msg} showTranslation={showTranslation} onRetry={onRetry} />
             </div>
           ))}
           <div ref={bottomRef} />

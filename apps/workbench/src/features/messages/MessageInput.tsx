@@ -4,9 +4,10 @@ import { Send } from 'lucide-react'
 interface MessageInputProps {
   disabled?: boolean
   onSend: (text: string) => void
+  onTextChange?: (text: string) => void
 }
 
-export function MessageInput({ disabled, onSend }: MessageInputProps): React.ReactElement {
+export function MessageInput({ disabled, onSend, onTextChange }: MessageInputProps): React.ReactElement {
   const [text, setText] = useState('')
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -22,6 +23,7 @@ export function MessageInput({ disabled, onSend }: MessageInputProps): React.Rea
     if (!trimmed) return
     onSend(trimmed)
     setText('')
+    onTextChange?.('')
   }
 
   return (
@@ -30,7 +32,10 @@ export function MessageInput({ disabled, onSend }: MessageInputProps): React.Rea
         ref={inputRef}
         type="text"
         value={text}
-        onChange={(e) => setText(e.target.value)}
+        onChange={(e) => {
+          setText(e.target.value)
+          onTextChange?.(e.target.value)
+        }}
         placeholder={disabled ? '选择会话后开始聊天' : '输入消息...'}
         disabled={disabled}
         className="flex-1 rounded-md border border-border px-3 py-2 text-sm outline-none focus:border-primary disabled:opacity-50"
