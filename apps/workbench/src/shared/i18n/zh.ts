@@ -6,6 +6,7 @@ export const zh = {
     cancel: '取消',
     loading: '加载中...',
     allPlatforms: '全部平台',
+    online: '在线',
   },
   auth: {
     title: 'kHub 销售工作台',
@@ -20,9 +21,10 @@ export const zh = {
     dataProtected: '数据已加密保护',
   },
   workbench: {
-    title: 'kHub 工作台',
-    searchPlaceholder: '搜索会话...',
+    title: '活跃会话',
+    searchPlaceholder: '搜索会话、线索...',
     aiAnalysis: 'AI 分析',
+    contactSubtitle: '联系人',
   },
   conversation: {
     empty: '暂无会话',
@@ -38,6 +40,9 @@ export const zh = {
     inputDisabledPlaceholder: '选择会话后开始聊天',
     showOriginal: '查看原文',
     showTranslation: '查看译文',
+    autoTranslate: '自动翻译',
+    original: '原文',
+    translatedFrom: '已翻译',
     newMessages: '{{count}} 条新消息',
     loadingMore: '加载更多...',
   },
@@ -47,6 +52,7 @@ export const zh = {
     translated: '译文',
     translating: '翻译中...',
     confirmSend: '确认发送',
+    targetLang: '翻译为',
   },
   analysis: {
     loadingAnalysis: '加载分析中...',
@@ -58,6 +64,11 @@ export const zh = {
     nextAction: '建议动作',
     evidence: '依据',
     suggestedReplies: '建议回复',
+    sentiment: '情感分析',
+    positive: '积极',
+    probability: '概率',
+    accountOverview: '账户概览',
+    suggestion: '快捷回复',
   },
   account: {
     disconnected: '已断连',

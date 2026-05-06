@@ -248,3 +248,29 @@ connector接 TG/WA 走 HTTP（与现有 Go:9800 风格一致）。
 - 销售工作台prd: docs/v1/kHub_workbench_prd_v1.md
 
 ---
+根据已有文档，包括完整计划、产品文档、技术方案，生成AGENTS.md文件：
+
+- 根目录kHub为总项目库，所有项目采用monorepo组织，销售工作台为其中一个独立项目
+- 本项目只负责实现工作台销售台
+- 基于已确定的技术栈
+- 尽量考虑全面，但要简练
+
+---
+应用design sysyem:
+
+- google stich design system: docs/design/design.md
+- 调整AGENTS.md
+- 调整相关ui和样式定义
+
+---
+调整AGENTS.md，更新i18n相关内容
+---
+优化登录页
+
+## 说明
+
+- 优化登录页：apps/workbench/src/pages/LoginPage.tsx
+- 先参考设计图：ai_input/resources/screenshots/workbench_login.png
+- 优化UI/UX
+
+---

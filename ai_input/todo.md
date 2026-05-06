@@ -1,6 +1,20 @@
-根据已有文档，包括完整计划、产品文档、技术方案，生成AGENTS.md文件：
+优化登录页
 
-- 根目录kHub为总项目库，所有项目采用monorepo组织，销售工作台为其中一个独立项目
-- 本项目只负责实现工作台销售台
-- 基于已确定的技术栈
-- 尽量考虑全面，但要简练
+## 说明
+
+- 优化登录页：apps/workbench/src/pages/LoginPage.tsx
+- 先参考设计图：ai_input/resources/screenshots/workbench_login.png
+- 优化UI/UX
+
+
+---
+
+优化UI/UX
+
+## 说明
+
+- 优化对话页：apps/workbench/src/pages/WorkbenchPage.tsx
+- 优化相关组件和功能
+- 参考设计图和html：
+    - 设计图：ai_input/resources/conversations/workbench_conversations.png
+    - code: ai_input/resources/conversations/code.html

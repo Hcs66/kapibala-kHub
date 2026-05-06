@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { Send } from 'lucide-react'
+import { Send, Paperclip } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
 interface MessageInputProps {
@@ -12,11 +12,11 @@ interface MessageInputProps {
 export function MessageInput({ disabled, onSend, onTextChange, externalText }: MessageInputProps): React.ReactElement {
   const { t } = useTranslation()
   const [text, setText] = useState('')
-  const inputRef = useRef<HTMLInputElement>(null)
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   useEffect(() => {
     if (!disabled) {
-      inputRef.current?.focus()
+      textareaRef.current?.focus()
     }
   }, [disabled])
 
@@ -26,7 +26,14 @@ export function MessageInput({ disabled, onSend, onTextChange, externalText }: M
     }
   }, [externalText])
 
-  const handleSubmit = (e: React.FormEvent): void => {
+  useEffect(() => {
+    const el = textareaRef.current
+    if (!el) return
+    el.style.height = 'auto'
+    el.style.height = `${String(Math.min(el.scrollHeight, 100))}px`
+  }, [text])
+
+  const handleSubmit = (e: React.SyntheticEvent<HTMLFormElement>): void => {
     e.preventDefault()
     const trimmed = text.trim()
     if (!trimmed) return
@@ -35,28 +42,50 @@ export function MessageInput({ disabled, onSend, onTextChange, externalText }: M
     onTextChange?.('')
   }
 
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>): void => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault()
+      const trimmed = text.trim()
+      if (!trimmed) return
+      onSend(trimmed)
+      setText('')
+      onTextChange?.('')
+    }
+  }
+
   return (
-    <form onSubmit={handleSubmit} className="flex gap-2 border-t border-border p-3">
-      <input
-        ref={inputRef}
-        type="text"
-        value={text}
-        onChange={(e) => {
-          setText(e.target.value)
-          onTextChange?.(e.target.value)
-        }}
-        placeholder={disabled ? t('message.inputDisabledPlaceholder') : t('message.inputPlaceholder')}
-        disabled={disabled}
-        className="flex-1 rounded-md border border-border bg-surface-container-lowest px-3 py-2 text-sm outline-none transition-shadow focus:border-primary focus:ring-2 focus:ring-primary-glow disabled:opacity-50"
-      />
-      <button
-        type="submit"
-        disabled={disabled || !text.trim()}
-        className="flex items-center gap-1.5 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary-dim disabled:opacity-50"
-      >
-        <Send className="h-4 w-4" />
-        {t('common.send')}
-      </button>
+    <form onSubmit={handleSubmit} className="shrink-0 border-t border-surface-container-highest bg-surface-bright p-md">
+      <div className="flex items-end gap-sm">
+        <button
+          type="button"
+          disabled={disabled}
+          className="p-2 text-outline-variant transition-colors hover:text-primary disabled:opacity-50"
+        >
+          <Paperclip className="h-5 w-5" />
+        </button>
+        <div className="flex flex-1 items-center rounded-lg border border-outline-variant bg-surface-container-lowest p-[2px] transition-all focus-within:border-primary focus-within:ring-2 focus-within:ring-primary-glow">
+          <textarea
+            ref={textareaRef}
+            value={text}
+            onChange={(e) => {
+              setText(e.target.value)
+              onTextChange?.(e.target.value)
+            }}
+            onKeyDown={handleKeyDown}
+            placeholder={disabled ? t('message.inputDisabledPlaceholder') : t('message.inputPlaceholder')}
+            disabled={disabled}
+            rows={1}
+            className="custom-scrollbar max-h-[100px] w-full resize-none border-none bg-transparent px-3 py-2 text-[14px] text-foreground outline-none placeholder:text-outline-variant disabled:opacity-50"
+          />
+        </div>
+        <button
+          type="submit"
+          disabled={disabled || !text.trim()}
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-md transition-colors hover:bg-primary-dim active:scale-95 disabled:opacity-50"
+        >
+          <Send className="h-5 w-5" />
+        </button>
+      </div>
     </form>
   )
 }
