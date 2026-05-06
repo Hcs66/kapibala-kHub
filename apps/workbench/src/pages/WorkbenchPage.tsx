@@ -192,7 +192,7 @@ export function WorkbenchPage(): React.ReactElement {
   return (
     <div className="flex h-svh flex-col">
       {wsStatus !== 'connected' && (
-        <div className="flex items-center justify-center bg-amber-50 px-4 py-1.5 text-xs text-amber-700">
+        <div className="flex items-center justify-center bg-error-container px-4 py-1.5 text-xs text-on-error-container">
           {wsStatus === 'connecting' && '正在连接...'}
           {wsStatus === 'disconnected' && '连接已断开，尝试重连中...'}
           {wsStatus === 'reconnecting' && '重连中...'}
@@ -201,13 +201,13 @@ export function WorkbenchPage(): React.ReactElement {
       <AccountStatusBar accounts={accounts} />
 
       <div className="flex flex-1 overflow-hidden">
-        <aside className="hidden w-60 shrink-0 flex-col border-r border-sidebar-border bg-sidebar md:flex">
-          <div className="flex h-12 items-center border-b border-sidebar-border px-3">
+        <aside className="hidden w-64 shrink-0 flex-col border-r border-border bg-white/78 backdrop-blur-[16px] md:flex">
+          <div className="flex h-12 items-center border-b border-border px-4">
             <span className="text-sm font-semibold">kHub 工作台</span>
           </div>
 
-          <div className="flex flex-col gap-2 border-b border-sidebar-border p-2">
-            <div className="flex items-center gap-1.5 rounded-md border border-border bg-background px-2.5 py-1.5">
+          <div className="flex flex-col gap-2 border-b border-border p-3">
+            <div className="flex items-center gap-1.5 rounded-md border border-border bg-surface-container-lowest px-2.5 py-1.5 transition-colors focus-within:border-primary focus-within:ring-2 focus-within:ring-primary-glow">
               <Search className="h-3.5 w-3.5 text-muted-foreground" />
               <input
                 type="text"
@@ -222,7 +222,7 @@ export function WorkbenchPage(): React.ReactElement {
               <select
                 value={platformFilter}
                 onChange={(e) => setPlatformFilter(e.target.value)}
-                className="flex-1 rounded border border-border bg-background px-2 py-1 text-xs outline-none"
+                className="flex-1 rounded-md border border-border bg-surface-container-lowest px-2 py-1 text-xs outline-none focus:border-primary focus:ring-2 focus:ring-primary-glow"
               >
                 <option value="">全部平台</option>
                 <option value="telegram">Telegram</option>
@@ -231,7 +231,7 @@ export function WorkbenchPage(): React.ReactElement {
             </div>
           </div>
 
-          <div className="flex-1 overflow-y-auto p-1.5">
+          <div className="flex-1 overflow-y-auto p-2">
             {conversationLoading ? (
               <ConversationSkeleton count={6} />
             ) : (
@@ -271,8 +271,8 @@ export function WorkbenchPage(): React.ReactElement {
           />
         </main>
 
-        <aside className="hidden w-80 shrink-0 flex-col border-l border-sidebar-border bg-sidebar lg:flex">
-          <div className="flex h-12 items-center border-b border-sidebar-border px-4">
+        <aside className="hidden w-80 shrink-0 flex-col border-l border-border bg-white/78 backdrop-blur-[16px] lg:flex">
+          <div className="flex h-12 items-center border-b border-border px-4">
             <span className="text-sm font-semibold">AI 分析</span>
           </div>
           <AnalysisSidebar

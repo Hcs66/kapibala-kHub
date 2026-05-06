@@ -71,11 +71,21 @@ kapibala-kHub/                  # monorepo root
 - 不在 store 中存放派生数据，用 selector 或 computed
 - 异步操作在 store action 中完成，组件只调用 action
 
-### Styling (Tailwind)
+### Styling (Tailwind + Intelligence Layer Design System)
 
-- 使用 shadcn/ui 组件作为基础，按需定制
-- 颜色使用 CSS 变量（shadcn 主题系统）
-- 不写自定义 CSS 文件，除非 Tailwind 无法表达
+- Design system 定义在 `docs/design/design.md`（"Intelligence Layer"）
+- 所有颜色、圆角、间距通过 CSS 变量定义在 `src/index.css` 的 `@theme` 块中
+- 字体：Inter（全局），通过 Google Fonts 或本地引入
+- 视觉风格：Modern Minimalism + Glassmorphism（半透明 + backdrop-blur）
+- 主色：Indigo（`--color-primary: #4f46e5`），背景：off-white slate（`--color-background: #f7f9fb`）
+- 圆角基线：8px（`--radius-DEFAULT`），大容器 16px（`--radius-lg`）
+- 间距基线：4px rhythm，内边距 MD(16px) / LG(24px)
+- 卡片：白底 + 1px border `#e2e8f0` + soft shadow `0 4px 20px rgba(0,0,0,0.04)`
+- AI 洞察区域：5% Indigo 背景色 + 2px gradient border
+- Glass 效果：`backdrop-filter: blur(16px)` + 70-80% opacity white fill
+- 输入框 focus：border 变 Indigo + 4px indigo glow
+- 列表 hover：light indigo tint `#eef2ff`
+- 不写自定义 CSS 文件，除非 Tailwind 无法表达（如 keyframes）
 - 响应式断点：`sm:640px` / `md:768px` / `lg:1024px` / `xl:1280px`
 
 ### File Organization
@@ -209,9 +219,12 @@ VITE_WORKBENCH_WS_URL=/workbench/ws    # real 模式 WebSocket
 
 | Document | Purpose |
 |----------|---------|
+| `docs/design/design.md` | Design System 定义（Intelligence Layer） |
 | `docs/v1/workbench_demo_plan.md` | Onsite 前开发计划（当前执行） |
 | `docs/v1/kHub_workbench_prd_v1.md` | 销售工作台产品需求文档 |
 | `docs/v1/kHub_plan_v1-2.md` | kHub V1.2 完整实施计划 |
 | `docs/v1/kHub_plan_ts_v1.md` | 技术实现规格（接口定义、Store 设计） |
 | `docs/v1/kHub_data_model_v1.md` | 数据模型定义 |
+| `docs/v1/workbench_onsite_questions.md` | Onsite 对接问题清单 |
+| `docs/v1/workbench_mock_to_real.md` | Mock → Real 切换配置说明 |
 | `ai_input/resources/kHub_Workbench_协作与对接说明_2026-05-05.md` | CTO 协作说明（DTO、mock contract） |

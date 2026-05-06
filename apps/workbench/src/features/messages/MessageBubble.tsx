@@ -53,12 +53,12 @@ export function MessageBubble({ message, showTranslation, onRetry }: MessageBubb
     <div className={`flex ${isOutbound ? 'justify-end' : 'justify-start'}`}>
       <div
         onClick={handleToggle}
-        className={`max-w-[70%] rounded-lg px-3 py-2 ${hasTranslation ? 'cursor-pointer' : ''} ${
+        className={`max-w-[70%] rounded-lg px-3.5 py-2.5 ${hasTranslation ? 'cursor-pointer' : ''} ${
           isOutbound
             ? message.status === 'failed'
               ? 'bg-destructive/10 text-foreground'
               : 'bg-primary text-primary-foreground'
-            : 'bg-muted text-foreground'
+            : 'bg-surface-container-low text-foreground'
         } transition-all duration-200`}
       >
         {!isOutbound && (
@@ -117,7 +117,7 @@ export function TimeSeparator({ timestamp }: TimeSeparatorProps): React.ReactEle
 
   return (
     <div className="flex items-center justify-center py-2">
-      <span className="rounded-full bg-muted px-3 py-0.5 text-xs text-muted-foreground">
+      <span className="rounded-full bg-surface-container px-3 py-0.5 text-[11px] text-on-surface-variant">
         {label}
       </span>
     </div>

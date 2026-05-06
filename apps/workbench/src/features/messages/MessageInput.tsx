@@ -45,12 +45,12 @@ export function MessageInput({ disabled, onSend, onTextChange, externalText }: M
         }}
         placeholder={disabled ? '选择会话后开始聊天' : '输入消息...'}
         disabled={disabled}
-        className="flex-1 rounded-md border border-border px-3 py-2 text-sm outline-none focus:border-primary disabled:opacity-50"
+        className="flex-1 rounded-md border border-border bg-surface-container-lowest px-3 py-2 text-sm outline-none transition-shadow focus:border-primary focus:ring-2 focus:ring-primary-glow disabled:opacity-50"
       />
       <button
         type="submit"
         disabled={disabled || !text.trim()}
-        className="flex items-center gap-1.5 rounded-md bg-primary px-4 py-2 text-sm text-primary-foreground disabled:opacity-50"
+        className="flex items-center gap-1.5 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary-dim disabled:opacity-50"
       >
         <Send className="h-4 w-4" />
         发送

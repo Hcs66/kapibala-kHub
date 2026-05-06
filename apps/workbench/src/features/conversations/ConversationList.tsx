@@ -18,7 +18,7 @@ function PlatformIcon({ platform }: { platform: string }): React.ReactElement {
   }
   return (
     <span
-      className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-medium text-white ${colors[platform] ?? 'bg-gray-400'}`}
+      className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-xs font-medium text-white ${colors[platform] ?? 'bg-gray-400'}`}
     >
       {labels[platform] ?? platform.slice(0, 2).toUpperCase()}
     </span>
@@ -42,15 +42,15 @@ export function ConversationItem({ conversation, isActive, onClick }: Conversati
     <button
       type="button"
       onClick={onClick}
-      className={`flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left transition-colors ${
-        isActive ? 'bg-accent' : 'hover:bg-muted'
+      className={`flex w-full items-center gap-3 rounded-md px-4 py-3 text-left transition-colors ${
+        isActive ? 'border-l-2 border-l-primary bg-primary/10' : 'hover:bg-accent'
       }`}
     >
       <PlatformIcon platform={conversation.platform} />
       <div className="min-w-0 flex-1">
         <div className="flex items-center justify-between">
-          <span className="truncate text-sm font-medium">{conversation.customerDisplayName}</span>
-          <span className="shrink-0 text-xs text-muted-foreground">
+          <span className="truncate text-[13px] font-medium">{conversation.customerDisplayName}</span>
+          <span className="shrink-0 text-[11px] text-on-surface-variant">
             {formatTime(conversation.lastMessageAtMs)}
           </span>
         </div>
@@ -59,7 +59,7 @@ export function ConversationItem({ conversation, isActive, onClick }: Conversati
             {conversation.lastMessageText}
           </span>
           {conversation.unreadCount > 0 && (
-            <span className="ml-2 flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-primary px-1.5 text-xs text-primary-foreground">
+            <span className="ml-2 flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-primary px-1.5 text-xs font-medium text-primary-foreground">
               {conversation.unreadCount > 99 ? '99+' : conversation.unreadCount}
             </span>
           )}

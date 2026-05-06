@@ -30,42 +30,42 @@ export function AnalysisSidebar({ analysis, loading, suggestedReplies, onSuggest
   return (
     <div className="flex flex-1 flex-col gap-4 overflow-y-auto p-4">
       {analysis.stage && (
-        <div className="rounded-md bg-muted p-3">
-          <p className="mb-1 text-xs font-medium text-muted-foreground">销售阶段</p>
+        <div className="rounded-lg bg-ai-tint p-3">
+          <p className="mb-1 text-xs font-medium tracking-wide text-muted-foreground">销售阶段</p>
           <p className="text-sm font-medium">{analysis.stage}</p>
         </div>
       )}
 
       <div>
-        <p className="mb-1.5 text-xs font-medium text-muted-foreground">会话摘要</p>
+        <p className="mb-1.5 text-xs font-medium tracking-wide text-muted-foreground">会话摘要</p>
         <p className="text-sm leading-relaxed">{analysis.summary}</p>
       </div>
 
       {analysis.trust && (
-        <div className="flex items-start gap-2">
+        <div className="flex items-start gap-2 rounded-lg bg-ai-tint p-3">
           <Lightbulb className="mt-0.5 h-4 w-4 shrink-0 text-amber-500" />
           <div>
-            <p className="text-xs font-medium text-muted-foreground">信任度</p>
+            <p className="text-xs font-medium tracking-wide text-muted-foreground">信任度</p>
             <p className="text-sm">{analysis.trust}</p>
           </div>
         </div>
       )}
 
       {analysis.concern && (
-        <div className="flex items-start gap-2">
+        <div className="flex items-start gap-2 rounded-lg bg-ai-tint p-3">
           <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-orange-500" />
           <div>
-            <p className="text-xs font-medium text-muted-foreground">关注点</p>
+            <p className="text-xs font-medium tracking-wide text-muted-foreground">关注点</p>
             <p className="text-sm">{analysis.concern}</p>
           </div>
         </div>
       )}
 
       {analysis.nextAction && (
-        <div className="flex items-start gap-2">
+        <div className="flex items-start gap-2 rounded-lg bg-ai-tint p-3">
           <ArrowRight className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
           <div>
-            <p className="text-xs font-medium text-muted-foreground">建议动作</p>
+            <p className="text-xs font-medium tracking-wide text-muted-foreground">建议动作</p>
             <p className="text-sm">{analysis.nextAction}</p>
           </div>
         </div>
@@ -75,7 +75,7 @@ export function AnalysisSidebar({ analysis, loading, suggestedReplies, onSuggest
         <div>
           <div className="mb-2 flex items-center gap-1.5">
             <MessageCircle className="h-3.5 w-3.5 text-primary" />
-            <p className="text-xs font-medium text-muted-foreground">建议回复</p>
+            <p className="text-xs font-medium tracking-wide text-muted-foreground">建议回复</p>
           </div>
           <div className="flex flex-col gap-2">
             {suggestedReplies.map((reply) => (
@@ -83,7 +83,7 @@ export function AnalysisSidebar({ analysis, loading, suggestedReplies, onSuggest
                 key={reply.id}
                 type="button"
                 onClick={() => onSuggestedReplyClick?.(reply.text)}
-                className="rounded-md border border-border bg-background p-2.5 text-left text-xs leading-relaxed transition-colors hover:border-primary/50 hover:bg-primary/5"
+                className="rounded-md border border-border bg-surface-container-lowest p-2.5 text-left text-xs leading-relaxed shadow-[0px_2px_12px_rgba(0,0,0,0.03)] transition-colors hover:border-primary/50 hover:bg-ai-tint"
               >
                 {reply.text}
               </button>
@@ -94,10 +94,10 @@ export function AnalysisSidebar({ analysis, loading, suggestedReplies, onSuggest
 
       {analysis.evidenceRefs.length > 0 && (
         <div>
-          <p className="mb-1.5 text-xs font-medium text-muted-foreground">依据</p>
+          <p className="mb-1.5 text-xs font-medium tracking-wide text-muted-foreground">依据</p>
           <div className="flex flex-col gap-1.5">
             {analysis.evidenceRefs.map((ref) => (
-              <div key={ref.messageId} className="rounded border border-border bg-muted/50 px-2.5 py-1.5">
+              <div key={ref.messageId} className="rounded-md border border-border bg-surface-container-low px-2.5 py-1.5">
                 <p className="text-xs italic text-muted-foreground">"{ref.quote}"</p>
               </div>
             ))}

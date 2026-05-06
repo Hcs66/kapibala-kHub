@@ -97,7 +97,7 @@ export function MessagePanel({
     return (
       <div className="flex flex-1 flex-col">
         <div className="flex h-12 items-center justify-between border-b border-border px-4">
-          <span className="text-sm font-medium">{conversationName ?? ''}</span>
+          <span className="text-sm font-semibold">{conversationName ?? ''}</span>
         </div>
         <div className="flex-1 px-4 py-3">
           <MessageSkeleton count={5} />
@@ -109,7 +109,7 @@ export function MessagePanel({
   if (messages.length === 0 && !conversationName) {
     return (
       <div className="flex flex-1 flex-col items-center justify-center gap-3">
-        <MessageSquare className="h-12 w-12 text-muted-foreground" />
+        <MessageSquare className="h-12 w-12 text-muted-foreground/50" />
         <p className="text-sm text-muted-foreground">选择一个会话开始聊天</p>
       </div>
     )
@@ -118,14 +118,14 @@ export function MessagePanel({
   return (
     <div className="relative flex flex-1 flex-col">
       <div className="flex h-12 items-center justify-between border-b border-border px-4">
-        <span className="text-sm font-medium">{conversationName ?? ''}</span>
+        <span className="text-sm font-semibold">{conversationName ?? ''}</span>
         <button
           type="button"
           onClick={onToggleTranslation}
-          className={`flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs transition-colors ${
+          className={`flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium transition-colors ${
             showTranslation
               ? 'bg-primary/10 text-primary'
-              : 'text-muted-foreground hover:bg-muted'
+              : 'text-muted-foreground hover:bg-accent'
           }`}
         >
           <Languages className="h-3.5 w-3.5" />

@@ -10,12 +10,12 @@ export function AccountStatusBar({ accounts }: AccountStatusBarProps): React.Rea
   if (disconnected.length === 0) return null
 
   return (
-    <div className="flex items-center gap-2 border-b border-border bg-destructive/5 px-4 py-2">
+    <div className="flex items-center gap-2 border-b border-border bg-error-container px-4 py-2">
       {disconnected.map((account) => (
         <div key={account.accountId} className="flex items-center gap-1.5 text-xs">
           <StatusIcon status={account.status} />
-          <span className="font-medium">{account.displayName}</span>
-          <span className="text-muted-foreground">
+          <span className="font-medium text-on-error-container">{account.displayName}</span>
+          <span className="text-on-error-container/70">
             {account.status === 'disconnected' && '已断连'}
             {account.status === 'reconnecting' && '重连中...'}
             {account.status === 'error' && (account.errorMessage ?? '连接错误')}

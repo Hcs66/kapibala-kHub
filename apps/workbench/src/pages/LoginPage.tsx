@@ -38,14 +38,14 @@ export function LoginPage(): React.ReactElement {
   }
 
   return (
-    <div className="flex min-h-svh items-center justify-center bg-muted">
+    <div className="flex min-h-svh items-center justify-center bg-background">
       <form
         onSubmit={handleSubmit}
-        className="w-full max-w-sm rounded-lg border border-border bg-background p-8 shadow-sm"
+        className="w-full max-w-sm rounded-lg border border-border bg-surface-container-lowest p-8 shadow-[0px_4px_20px_rgba(0,0,0,0.04)]"
       >
         <h1 className="mb-6 text-center text-xl font-semibold">kHub 销售工作台</h1>
 
-        <label className="mb-1 block text-sm text-muted-foreground" htmlFor="username">
+        <label className="mb-1 block text-xs tracking-wide text-muted-foreground" htmlFor="username">
           用户名
         </label>
         <input
@@ -53,12 +53,12 @@ export function LoginPage(): React.ReactElement {
           type="text"
           value={username}
           onChange={(e) => setUsername(e.target.value)}
-          className="mb-4 w-full rounded-md border border-border px-3 py-2 text-sm outline-none focus:border-primary"
+          className="mb-4 w-full rounded-md border border-border bg-surface-container-lowest px-3 py-2 text-sm outline-none transition-shadow focus:border-primary focus:ring-2 focus:ring-primary-glow"
           placeholder="sales"
           autoComplete="username"
         />
 
-        <label className="mb-1 block text-sm text-muted-foreground" htmlFor="password">
+        <label className="mb-1 block text-xs tracking-wide text-muted-foreground" htmlFor="password">
           密码
         </label>
         <input
@@ -66,7 +66,7 @@ export function LoginPage(): React.ReactElement {
           type="password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          className="mb-6 w-full rounded-md border border-border px-3 py-2 text-sm outline-none focus:border-primary"
+          className="mb-6 w-full rounded-md border border-border bg-surface-container-lowest px-3 py-2 text-sm outline-none transition-shadow focus:border-primary focus:ring-2 focus:ring-primary-glow"
           placeholder="sales"
           autoComplete="current-password"
         />
@@ -76,7 +76,7 @@ export function LoginPage(): React.ReactElement {
         <button
           type="submit"
           disabled={loading || !username || !password}
-          className="w-full rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-50"
+          className="w-full rounded-md bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary-dim disabled:opacity-50"
         >
           {loading ? '登录中...' : '登录'}
         </button>

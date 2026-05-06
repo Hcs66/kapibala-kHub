@@ -41,7 +41,7 @@ export function TranslatePreview({ text, targetLang, onConfirmSend }: TranslateP
   if (!text.trim()) return null
 
   return (
-    <div className="border-t border-border bg-muted/50 px-4 py-2.5">
+    <div className="border-t border-border bg-white/78 px-4 py-2.5 backdrop-blur-[16px]">
       <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
         <Languages className="h-3.5 w-3.5" />
         <span>翻译预览</span>
@@ -61,7 +61,7 @@ export function TranslatePreview({ text, targetLang, onConfirmSend }: TranslateP
         <button
           type="button"
           onClick={handleConfirm}
-          className="mt-2 rounded-md bg-primary px-3 py-1 text-xs text-primary-foreground"
+          className="mt-2 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground transition-colors hover:bg-primary-dim"
         >
           确认发送
         </button>
