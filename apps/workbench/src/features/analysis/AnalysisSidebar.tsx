@@ -1,12 +1,15 @@
 import type { AnalysisSummaryDTO } from '@/shared/api/types'
-import { Brain, Lightbulb, AlertTriangle, ArrowRight } from 'lucide-react'
+import { Brain, Lightbulb, AlertTriangle, ArrowRight, MessageCircle } from 'lucide-react'
+import type { SuggestedReply } from '@/mocks/data'
 
 interface AnalysisSidebarProps {
   analysis: AnalysisSummaryDTO | null
   loading?: boolean
+  suggestedReplies?: SuggestedReply[]
+  onSuggestedReplyClick?: (text: string) => void
 }
 
-export function AnalysisSidebar({ analysis, loading }: AnalysisSidebarProps): React.ReactElement {
+export function AnalysisSidebar({ analysis, loading, suggestedReplies, onSuggestedReplyClick }: AnalysisSidebarProps): React.ReactElement {
   if (loading) {
     return (
       <div className="flex flex-1 items-center justify-center">
@@ -64,6 +67,27 @@ export function AnalysisSidebar({ analysis, loading }: AnalysisSidebarProps): Re
           <div>
             <p className="text-xs font-medium text-muted-foreground">建议动作</p>
             <p className="text-sm">{analysis.nextAction}</p>
+          </div>
+        </div>
+      )}
+
+      {suggestedReplies && suggestedReplies.length > 0 && (
+        <div>
+          <div className="mb-2 flex items-center gap-1.5">
+            <MessageCircle className="h-3.5 w-3.5 text-primary" />
+            <p className="text-xs font-medium text-muted-foreground">建议回复</p>
+          </div>
+          <div className="flex flex-col gap-2">
+            {suggestedReplies.map((reply) => (
+              <button
+                key={reply.id}
+                type="button"
+                onClick={() => onSuggestedReplyClick?.(reply.text)}
+                className="rounded-md border border-border bg-background p-2.5 text-left text-xs leading-relaxed transition-colors hover:border-primary/50 hover:bg-primary/5"
+              >
+                {reply.text}
+              </button>
+            ))}
           </div>
         </div>
       )}

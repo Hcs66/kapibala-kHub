@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Check, CheckCheck, X, Loader2, RotateCcw } from 'lucide-react'
 import type { MessageDTO } from '@/shared/api/types'
 
@@ -30,21 +31,35 @@ function formatMessageTime(ms: number): string {
 }
 
 export function MessageBubble({ message, showTranslation, onRetry }: MessageBubbleProps): React.ReactElement {
+  const [localShowTranslated, setLocalShowTranslated] = useState<boolean | null>(null)
   const isOutbound = message.direction === 'outbound'
-  const displayText = showTranslation && message.translatedText
+  const hasTranslation = Boolean(message.translatedText)
+
+  const effectiveShowTranslation = localShowTranslated !== null ? localShowTranslated : showTranslation
+  const displayText = effectiveShowTranslation && message.translatedText
     ? message.translatedText
     : message.originalText
+
+  const handleToggle = (): void => {
+    if (!hasTranslation) return
+    if (localShowTranslated === null) {
+      setLocalShowTranslated(!showTranslation)
+    } else {
+      setLocalShowTranslated(!localShowTranslated)
+    }
+  }
 
   return (
     <div className={`flex ${isOutbound ? 'justify-end' : 'justify-start'}`}>
       <div
-        className={`max-w-[70%] rounded-lg px-3 py-2 ${
+        onClick={handleToggle}
+        className={`max-w-[70%] rounded-lg px-3 py-2 ${hasTranslation ? 'cursor-pointer' : ''} ${
           isOutbound
             ? message.status === 'failed'
               ? 'bg-destructive/10 text-foreground'
               : 'bg-primary text-primary-foreground'
             : 'bg-muted text-foreground'
-        }`}
+        } transition-all duration-200`}
       >
         {!isOutbound && (
           <p className="mb-0.5 text-xs font-medium opacity-70">
@@ -53,12 +68,20 @@ export function MessageBubble({ message, showTranslation, onRetry }: MessageBubb
         )}
         <p className="whitespace-pre-wrap text-sm">{displayText}</p>
         <div className={`mt-1 flex items-center gap-1 ${isOutbound ? 'justify-end' : 'justify-start'}`}>
+          {hasTranslation && (
+            <span className={`text-xs ${isOutbound ? 'opacity-60' : 'text-muted-foreground opacity-70'}`}>
+              {effectiveShowTranslation ? '译' : '原'}
+            </span>
+          )}
           <span className="text-xs opacity-60">{formatMessageTime(message.createdAtMs)}</span>
           {isOutbound && <StatusIcon status={message.status} />}
           {message.status === 'failed' && onRetry && (
             <button
               type="button"
-              onClick={() => onRetry(message.messageId)}
+              onClick={(e) => {
+                e.stopPropagation()
+                onRetry(message.messageId)
+              }}
               className="ml-1 flex items-center gap-0.5 rounded px-1.5 py-0.5 text-xs text-destructive hover:bg-destructive/10"
             >
               <RotateCcw className="h-3 w-3" />

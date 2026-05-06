@@ -1,5 +1,10 @@
 import type { ConversationDTO, MessageDTO, AccountStatusDTO, AnalysisSummaryDTO } from '@/shared/api/types'
 
+export interface SuggestedReply {
+  id: string
+  text: string
+}
+
 const now = Date.now()
 const minute = 60_000
 const hour = 3_600_000
@@ -308,4 +313,118 @@ export const mockAnalysis: Record<string, AnalysisSummaryDTO> = {
     ],
     updatedAtMs: now - 10 * minute,
   },
+}
+
+export const mockSuggestedReplies: Record<string, SuggestedReply[]> = {
+  'telegram::100001': [
+    { id: 'sr_001', text: '我们的最小起订量是100件，运费根据重量计算，大约$15/kg到俄罗斯。' },
+    { id: 'sr_002', text: '我可以为您准备一份详细的报价单，包含电阻和电容的价格及运费方案。' },
+    { id: 'sr_003', text: '请问您需要哪些具体型号？我可以查询库存和价格。' },
+  ],
+  'whatsapp::200001': [
+    { id: 'sr_101', text: 'Sure! I will send you our latest product catalog right away.' },
+    { id: 'sr_102', text: 'Here is our catalog link. Could you tell me which category interests you most?' },
+    { id: 'sr_103', text: 'I have attached the catalog. Let me know if you need samples.' },
+  ],
+}
+
+export const mockHistoryMessages: Record<string, MessageDTO[]> = {
+  'telegram::100001': [
+    {
+      messageId: 'msg_h001',
+      conversationId: 'telegram::100001',
+      platform: 'telegram',
+      accountId: 'acc_tg_01',
+      direction: 'inbound',
+      senderId: 'customer_100001',
+      senderDisplayName: '客户 A-382',
+      originalText: 'Здравствуйте, меня зовут Алексей',
+      translatedText: '你好，我叫阿列克谢',
+      language: 'ru',
+      createdAtMs: now - 60 * minute,
+    },
+    {
+      messageId: 'msg_h002',
+      conversationId: 'telegram::100001',
+      platform: 'telegram',
+      accountId: 'acc_tg_01',
+      direction: 'outbound',
+      senderId: 'user_sales_001',
+      senderDisplayName: '张三',
+      originalText: '阿列克谢您好！欢迎咨询，我是销售张三。',
+      translatedText: 'Алексей, здравствуйте! Добро пожаловать, я менеджер Чжан Сань.',
+      language: 'zh-CN',
+      status: 'read',
+      createdAtMs: now - 55 * minute,
+    },
+    {
+      messageId: 'msg_h003',
+      conversationId: 'telegram::100001',
+      platform: 'telegram',
+      accountId: 'acc_tg_01',
+      direction: 'inbound',
+      senderId: 'customer_100001',
+      senderDisplayName: '客户 A-382',
+      originalText: 'Я представляю компанию ООО "ЭлектроТех"',
+      translatedText: '我代表"电子科技"有限公司',
+      language: 'ru',
+      createdAtMs: now - 50 * minute,
+    },
+    {
+      messageId: 'msg_h004',
+      conversationId: 'telegram::100001',
+      platform: 'telegram',
+      accountId: 'acc_tg_01',
+      direction: 'outbound',
+      senderId: 'user_sales_001',
+      senderDisplayName: '张三',
+      originalText: '很高兴认识您！请问贵公司主要采购哪些类型的电子元器件？',
+      translatedText: 'Рад познакомиться! Какие типы электронных компонентов закупает ваша компания?',
+      language: 'zh-CN',
+      status: 'read',
+      createdAtMs: now - 45 * minute,
+    },
+    {
+      messageId: 'msg_h005',
+      conversationId: 'telegram::100001',
+      platform: 'telegram',
+      accountId: 'acc_tg_01',
+      direction: 'inbound',
+      senderId: 'customer_100001',
+      senderDisplayName: '客户 A-382',
+      originalText: 'Мы занимаемся производством электроники и нам нужны различные компоненты',
+      translatedText: '我们从事电子产品生产，需要各种元器件',
+      language: 'ru',
+      createdAtMs: now - 40 * minute,
+    },
+  ],
+  'whatsapp::200001': [
+    {
+      messageId: 'msg_h101',
+      conversationId: 'whatsapp::200001',
+      platform: 'whatsapp',
+      accountId: 'acc_wa_01',
+      direction: 'inbound',
+      senderId: 'customer_200001',
+      senderDisplayName: '客户 B-156',
+      originalText: 'Hello, is this the sales department?',
+      translatedText: '你好，这是销售部门吗？',
+      language: 'en',
+      createdAtMs: now - 60 * minute,
+    },
+    {
+      messageId: 'msg_h102',
+      conversationId: 'whatsapp::200001',
+      platform: 'whatsapp',
+      accountId: 'acc_wa_01',
+      direction: 'outbound',
+      senderId: 'user_sales_001',
+      senderDisplayName: '张三',
+      originalText: '是的，我是销售代表张三，请问有什么可以帮您？',
+      translatedText: 'Yes, I am sales representative Zhang San. How can I help you?',
+      language: 'zh-CN',
+      status: 'read',
+      createdAtMs: now - 55 * minute,
+    },
+  ],
 }

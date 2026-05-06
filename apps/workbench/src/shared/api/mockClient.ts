@@ -14,13 +14,18 @@ import type {
   AccountStatusDTO,
   CurrentUserDTO,
 } from './types'
-import { mockConversations, mockMessages, mockAccounts, mockAnalysis } from '@/mocks/data'
+import { mockConversations, mockMessages, mockAccounts, mockAnalysis, mockHistoryMessages, mockSuggestedReplies } from '@/mocks/data'
+import type { SuggestedReply } from '@/mocks/data'
 
 function delay(ms: number): Promise<void> {
   return new Promise((r) => setTimeout(r, ms))
 }
 
-export const mockClient: WorkbenchApi = {
+export interface MockClientExtended extends WorkbenchApi {
+  getSuggestedReplies(conversationId: string): SuggestedReply[]
+}
+
+export const mockClient: MockClientExtended = {
   async login(input: LoginRequest): Promise<LoginResult> {
     await delay(500)
     if (input.username === 'sales' && input.password === 'sales') {
@@ -75,9 +80,16 @@ export const mockClient: WorkbenchApi = {
   async listMessages(input: MessageHistoryQuery): Promise<MessageHistoryResult> {
     await delay(400)
     const messages = mockMessages[input.conversationId] ?? []
+    if (input.beforeSeq) {
+      const history = mockHistoryMessages[input.conversationId] ?? []
+      return {
+        messages: history,
+        hasMore: false,
+      }
+    }
     return {
       messages,
-      hasMore: false,
+      hasMore: Boolean(mockHistoryMessages[input.conversationId]?.length),
     }
   },
 
@@ -126,5 +138,9 @@ export const mockClient: WorkbenchApi = {
   async listAccounts(): Promise<AccountStatusDTO[]> {
     await delay(200)
     return mockAccounts
+  },
+
+  getSuggestedReplies(conversationId: string): SuggestedReply[] {
+    return mockSuggestedReplies[conversationId] ?? []
   },
 }

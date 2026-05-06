@@ -5,9 +5,10 @@ interface MessageInputProps {
   disabled?: boolean
   onSend: (text: string) => void
   onTextChange?: (text: string) => void
+  externalText?: string
 }
 
-export function MessageInput({ disabled, onSend, onTextChange }: MessageInputProps): React.ReactElement {
+export function MessageInput({ disabled, onSend, onTextChange, externalText }: MessageInputProps): React.ReactElement {
   const [text, setText] = useState('')
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -16,6 +17,12 @@ export function MessageInput({ disabled, onSend, onTextChange }: MessageInputPro
       inputRef.current?.focus()
     }
   }, [disabled])
+
+  useEffect(() => {
+    if (externalText !== undefined && externalText !== text) {
+      setText(externalText)
+    }
+  }, [externalText])
 
   const handleSubmit = (e: React.FormEvent): void => {
     e.preventDefault()

@@ -8,24 +8,35 @@ import { MessageInput } from '@/features/messages/MessageInput'
 import { AnalysisSidebar } from '@/features/analysis/AnalysisSidebar'
 import { AccountStatusBar } from '@/features/accounts/AccountStatusBar'
 import { TranslatePreview } from '@/features/translate/TranslatePreview'
+import { ConversationSkeleton } from '@/features/messages/MessageSkeleton'
 import { mockClient } from '@/shared/api/mockClient'
 import { createMockWs } from '@/shared/ws/mockWs'
 import type { MessageDTO, AnalysisSummaryDTO, AccountStatusDTO, ServerPushEvent } from '@/shared/api/types'
 import type { WsConnectionStatus } from '@/shared/ws/client'
+import type { SuggestedReply } from '@/mocks/data'
 
 export function WorkbenchPage(): React.ReactElement {
   const conversations = useConversationStore((s) => s.conversations)
   const currentId = useConversationStore((s) => s.currentConversationId)
+  const conversationLoading = useConversationStore((s) => s.loading)
   const setConversations = useConversationStore((s) => s.setConversations)
   const switchConversation = useConversationStore((s) => s.switchConversation)
   const incrementUnread = useConversationStore((s) => s.incrementUnread)
+  const setConversationLoading = useConversationStore((s) => s.setLoading)
 
   const messages = useMessageStore((s) => s.messages)
   const showTranslation = useMessageStore((s) => s.showTranslation)
+  const hasMore = useMessageStore((s) => s.hasMore)
+  const loadingMore = useMessageStore((s) => s.loadingMore)
+  const messageLoading = useMessageStore((s) => s.loading)
   const setMessages = useMessageStore((s) => s.setMessages)
+  const prependMessages = useMessageStore((s) => s.prependMessages)
   const appendMessage = useMessageStore((s) => s.appendMessage)
   const updateMessageStatus = useMessageStore((s) => s.updateMessageStatus)
   const toggleTranslation = useMessageStore((s) => s.toggleTranslation)
+  const setHasMore = useMessageStore((s) => s.setHasMore)
+  const setLoadingMore = useMessageStore((s) => s.setLoadingMore)
+  const setMessageLoading = useMessageStore((s) => s.setLoading)
 
   const [analysis, setAnalysis] = useState<AnalysisSummaryDTO | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
@@ -33,15 +44,18 @@ export function WorkbenchPage(): React.ReactElement {
   const [accounts, setAccounts] = useState<AccountStatusDTO[]>([])
   const [wsStatus, setWsStatus] = useState<WsConnectionStatus>('disconnected')
   const [inputText, setInputText] = useState('')
+  const [suggestedReplies, setSuggestedReplies] = useState<SuggestedReply[]>([])
 
   const wsRef = useRef(createMockWs())
 
   useEffect(() => {
+    setConversationLoading(true)
     void mockClient.listConversations({}).then((result) => {
       setConversations(result.conversations)
+      setConversationLoading(false)
     })
     void mockClient.listAccounts().then(setAccounts)
-  }, [setConversations])
+  }, [setConversations, setConversationLoading])
 
   useEffect(() => {
     const ws = wsRef.current
@@ -70,13 +84,31 @@ export function WorkbenchPage(): React.ReactElement {
     if (!currentId) {
       setMessages([])
       setAnalysis(null)
+      setSuggestedReplies([])
       return
     }
+    setMessageLoading(true)
     void mockClient.listMessages({ conversationId: currentId }).then((result) => {
       setMessages(result.messages)
+      setHasMore(result.hasMore)
+      setMessageLoading(false)
     })
     void mockClient.getAnalysisSummary(currentId).then(setAnalysis)
-  }, [currentId, setMessages])
+    setSuggestedReplies(mockClient.getSuggestedReplies(currentId))
+  }, [currentId, setMessages, setHasMore, setMessageLoading])
+
+  const handleLoadMore = useCallback(() => {
+    if (!currentId || loadingMore || !hasMore) return
+    setLoadingMore(true)
+    const oldestMessage = messages[0]
+    void mockClient
+      .listMessages({ conversationId: currentId, beforeSeq: oldestMessage?.createdAtMs })
+      .then((result) => {
+        prependMessages(result.messages)
+        setHasMore(result.hasMore)
+        setLoadingMore(false)
+      })
+  }, [currentId, loadingMore, hasMore, messages, prependMessages, setHasMore, setLoadingMore])
 
   const handleSend = useCallback(
     (text: string) => {
@@ -130,6 +162,13 @@ export function WorkbenchPage(): React.ReactElement {
     [handleSend],
   )
 
+  const handleSuggestedReplyClick = useCallback(
+    (text: string) => {
+      setInputText(text)
+    },
+    [],
+  )
+
   const currentConversation = conversations.find((c) => c.conversationId === currentId)
 
   const filteredConversations = conversations.filter((c) => {
@@ -153,7 +192,7 @@ export function WorkbenchPage(): React.ReactElement {
       <AccountStatusBar accounts={accounts} />
 
       <div className="flex flex-1 overflow-hidden">
-        <aside className="flex w-60 shrink-0 flex-col border-r border-sidebar-border bg-sidebar">
+        <aside className="hidden w-60 shrink-0 flex-col border-r border-sidebar-border bg-sidebar md:flex">
           <div className="flex h-12 items-center border-b border-sidebar-border px-3">
             <span className="text-sm font-semibold">kHub 工作台</span>
           </div>
@@ -184,11 +223,15 @@ export function WorkbenchPage(): React.ReactElement {
           </div>
 
           <div className="flex-1 overflow-y-auto p-1.5">
-            <ConversationList
-              conversations={filteredConversations}
-              currentId={currentId}
-              onSelect={switchConversation}
-            />
+            {conversationLoading ? (
+              <ConversationSkeleton count={6} />
+            ) : (
+              <ConversationList
+                conversations={filteredConversations}
+                currentId={currentId}
+                onSelect={switchConversation}
+              />
+            )}
           </div>
         </aside>
 
@@ -198,6 +241,10 @@ export function WorkbenchPage(): React.ReactElement {
             showTranslation={showTranslation}
             onToggleTranslation={toggleTranslation}
             onRetry={handleRetry}
+            onLoadMore={handleLoadMore}
+            hasMore={hasMore}
+            loadingMore={loadingMore}
+            loading={messageLoading}
             conversationName={currentConversation?.customerDisplayName}
           />
           {inputText.trim() && currentId && (
@@ -211,14 +258,19 @@ export function WorkbenchPage(): React.ReactElement {
             disabled={!currentId}
             onSend={handleSend}
             onTextChange={setInputText}
+            externalText={inputText}
           />
         </main>
 
-        <aside className="flex w-80 shrink-0 flex-col border-l border-sidebar-border bg-sidebar">
+        <aside className="hidden w-80 shrink-0 flex-col border-l border-sidebar-border bg-sidebar lg:flex">
           <div className="flex h-12 items-center border-b border-sidebar-border px-4">
             <span className="text-sm font-semibold">AI 分析</span>
           </div>
-          <AnalysisSidebar analysis={analysis} />
+          <AnalysisSidebar
+            analysis={analysis}
+            suggestedReplies={suggestedReplies}
+            onSuggestedReplyClick={handleSuggestedReplyClick}
+          />
         </aside>
       </div>
     </div>
