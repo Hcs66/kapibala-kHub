@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next'
-import { Bell, Settings, User, Globe } from 'lucide-react'
+import { Search, Bell, Settings, User, Globe } from 'lucide-react'
 import { changeLanguage } from '@/shared/i18n'
 
 export function TopBar(): React.ReactElement {
@@ -8,6 +8,17 @@ export function TopBar(): React.ReactElement {
   return (
     <header className="flex h-[56px] shrink-0 items-center justify-between border-b border-sidebar-border bg-surface-container-lowest px-lg">
       <span className="text-lg font-semibold text-primary">{t('layout.appName')} Workbench</span>
+
+      <div className="flex max-w-[480px] flex-1 items-center justify-center px-lg">
+        <div className="flex w-full items-center gap-2 rounded-lg border border-outline-variant bg-surface-container-low px-sm py-[7px] transition-all focus-within:border-primary focus-within:ring-2 focus-within:ring-primary-glow">
+          <Search className="h-4 w-4 shrink-0 text-outline-variant" />
+          <input
+            type="text"
+            placeholder={t('layout.topbar.searchPlaceholder')}
+            className="flex-1 bg-transparent text-sm outline-none placeholder:text-outline-variant"
+          />
+        </div>
+      </div>
 
       <div className="flex items-center gap-xs">
         <button
