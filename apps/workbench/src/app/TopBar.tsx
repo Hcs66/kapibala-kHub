@@ -1,0 +1,47 @@
+import { useTranslation } from 'react-i18next'
+import { Search, Bell, Settings, User } from 'lucide-react'
+
+export function TopBar(): React.ReactElement {
+  const { t } = useTranslation()
+
+  return (
+    <header className="flex h-[56px] shrink-0 items-center justify-between border-b border-sidebar-border bg-surface-container-lowest px-lg">
+      <span className="text-lg font-semibold text-primary">{t('layout.appName')} Workbench</span>
+
+      <div className="flex max-w-[480px] flex-1 items-center justify-center px-lg">
+        <div className="flex w-full items-center gap-2 rounded-lg border border-outline-variant bg-surface-container-low px-sm py-[7px] transition-all focus-within:border-primary focus-within:ring-2 focus-within:ring-primary-glow">
+          <Search className="h-4 w-4 shrink-0 text-outline-variant" />
+          <input
+            type="text"
+            placeholder={t('layout.topbar.searchPlaceholder')}
+            className="flex-1 bg-transparent text-sm outline-none placeholder:text-outline-variant"
+          />
+        </div>
+      </div>
+
+      <div className="flex items-center gap-xs">
+        <button
+          type="button"
+          title={t('layout.topbar.notifications')}
+          className="rounded-lg p-[8px] text-muted-foreground transition-colors hover:bg-surface-container-low hover:text-foreground"
+        >
+          <Bell className="h-5 w-5" />
+        </button>
+        <button
+          type="button"
+          title={t('layout.topbar.settings')}
+          className="rounded-lg p-[8px] text-muted-foreground transition-colors hover:bg-surface-container-low hover:text-foreground"
+        >
+          <Settings className="h-5 w-5" />
+        </button>
+        <button
+          type="button"
+          title={t('layout.topbar.profile')}
+          className="ml-xs flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground"
+        >
+          <User className="h-4 w-4" />
+        </button>
+      </div>
+    </header>
+  )
+}

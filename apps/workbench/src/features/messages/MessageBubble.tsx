@@ -31,6 +31,21 @@ function formatMessageTime(ms: number): string {
   return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`
 }
 
+function MessageAvatar({ name, isOutbound }: { name: string; isOutbound: boolean }): React.ReactElement {
+  if (isOutbound) {
+    return (
+      <div className="mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
+        Me
+      </div>
+    )
+  }
+  return (
+    <div className="mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-secondary-container text-xs font-bold text-primary">
+      {name.charAt(0).toUpperCase()}
+    </div>
+  )
+}
+
 export function MessageBubble({ message, showTranslation, onRetry }: MessageBubbleProps): React.ReactElement {
   const { t } = useTranslation()
   const [localShowTranslated, setLocalShowTranslated] = useState<boolean | null>(null)
@@ -52,30 +67,36 @@ export function MessageBubble({ message, showTranslation, onRetry }: MessageBubb
   }
 
   return (
-    <div className={`flex ${isOutbound ? 'justify-end' : 'justify-start'}`}>
-      <div
-        onClick={handleToggle}
-        className={`max-w-[70%] rounded-lg px-3.5 py-2.5 ${hasTranslation ? 'cursor-pointer' : ''} ${
-          isOutbound
-            ? message.status === 'failed'
-              ? 'bg-destructive/10 text-foreground'
-              : 'bg-primary text-primary-foreground'
-            : 'bg-surface-container-low text-foreground'
-        } transition-all duration-200`}
-      >
-        {!isOutbound && (
-          <p className="mb-0.5 text-xs font-medium opacity-70">
-            {message.senderDisplayName}
-          </p>
-        )}
-        <p className="whitespace-pre-wrap text-sm">{displayText}</p>
-        <div className={`mt-1 flex items-center gap-1 ${isOutbound ? 'justify-end' : 'justify-start'}`}>
-          {hasTranslation && (
-            <span className={`text-xs ${isOutbound ? 'opacity-60' : 'text-muted-foreground opacity-70'}`}>
-              {effectiveShowTranslation ? t('message.showTranslation') : t('message.showOriginal')}
+    <div className={`flex gap-sm ${isOutbound ? 'flex-row-reverse self-end' : 'self-start'} max-w-[80%]`}>
+      <MessageAvatar name={message.senderDisplayName} isOutbound={isOutbound} />
+      <div className={`flex flex-col gap-1 ${isOutbound ? 'items-end' : 'items-start'}`}>
+        <div
+          onClick={handleToggle}
+          className={`rounded-2xl p-sm shadow-sm ${hasTranslation ? 'cursor-pointer' : ''} ${
+            isOutbound
+              ? message.status === 'failed'
+                ? 'rounded-tr-sm bg-destructive/10 text-foreground'
+                : 'rounded-tr-sm bg-primary text-primary-foreground'
+              : 'rounded-tl-sm border border-surface-container-highest bg-surface-container-low text-foreground'
+          } transition-all duration-200`}
+        >
+          {!isOutbound && effectiveShowTranslation && message.translatedText && message.originalText !== message.translatedText && (
+            <p className="mb-1 text-[12px] italic text-outline-variant">
+              {message.originalText}
+            </p>
+          )}
+          <p className="whitespace-pre-wrap text-[14px]">{displayText}</p>
+        </div>
+        <div className={`flex items-center gap-xs px-2 ${isOutbound ? 'justify-end' : 'justify-start'}`}>
+          {hasTranslation && !isOutbound && (
+            <span className="flex items-center gap-1 text-[10px] font-semibold tracking-wide text-outline">
+              {t('message.translatedFrom')}
             </span>
           )}
-          <span className="text-xs opacity-60">{formatMessageTime(message.createdAtMs)}</span>
+          <span className="text-[10px] font-semibold tracking-wide text-outline">
+            {formatMessageTime(message.createdAtMs)}
+            {isOutbound && message.status === 'read' && ' • Read'}
+          </span>
           {isOutbound && <StatusIcon status={message.status} />}
           {message.status === 'failed' && onRetry && (
             <button
@@ -111,7 +132,7 @@ export function TimeSeparator({ timestamp }: TimeSeparatorProps): React.ReactEle
 
   let label: string
   if (isToday) {
-    label = formatMessageTime(timestamp)
+    label = `Today, ${formatMessageTime(timestamp)}`
   } else if (isYesterday) {
     label = `${t('conversation.yesterday')} ${formatMessageTime(timestamp)}`
   } else {
@@ -119,8 +140,8 @@ export function TimeSeparator({ timestamp }: TimeSeparatorProps): React.ReactEle
   }
 
   return (
-    <div className="flex items-center justify-center py-2">
-      <span className="rounded-full bg-surface-container px-3 py-0.5 text-[11px] text-on-surface-variant">
+    <div className="my-2 flex justify-center">
+      <span className="rounded-full bg-surface-container-highest px-3 py-1 text-[10px] font-semibold tracking-wide text-on-surface-variant">
         {label}
       </span>
     </div>

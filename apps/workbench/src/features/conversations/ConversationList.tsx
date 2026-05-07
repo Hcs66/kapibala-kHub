@@ -8,20 +8,29 @@ interface ConversationItemProps {
   onClick: () => void
 }
 
-function PlatformIcon({ platform }: { platform: string }): React.ReactElement {
-  const colors: Record<string, string> = {
-    telegram: 'bg-sky-500',
-    whatsapp: 'bg-green-500',
+function Avatar({ name }: { name: string }): React.ReactElement {
+  const initial = name.charAt(0).toUpperCase()
+  return (
+    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-secondary-container text-sm font-bold text-primary">
+      {initial}
+    </div>
+  )
+}
+
+function PlatformPill({ platform }: { platform: string }): React.ReactElement {
+  const styles: Record<string, string> = {
+    telegram: 'bg-blue-100 text-blue-800',
+    whatsapp: 'bg-green-100 text-green-800',
   }
   const labels: Record<string, string> = {
-    telegram: 'TG',
-    whatsapp: 'WA',
+    telegram: 'Telegram',
+    whatsapp: 'WhatsApp',
   }
   return (
     <span
-      className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-xs font-medium text-white ${colors[platform] ?? 'bg-gray-400'}`}
+      className={`rounded px-[6px] py-[2px] text-[9px] font-semibold uppercase tracking-wide ${styles[platform] ?? 'bg-gray-100 text-gray-700'}`}
     >
-      {labels[platform] ?? platform.slice(0, 2).toUpperCase()}
+      {labels[platform] ?? platform}
     </span>
   )
 }
@@ -44,24 +53,30 @@ export function ConversationItem({ conversation, isActive, onClick }: Conversati
     <button
       type="button"
       onClick={onClick}
-      className={`flex w-full items-center gap-3 rounded-md px-4 py-3 text-left transition-colors ${
-        isActive ? 'border-l-2 border-l-primary bg-primary/10' : 'hover:bg-accent'
+      className={`relative flex w-full gap-sm rounded-lg p-sm text-left transition-colors ${
+        isActive
+          ? 'border border-primary/20 bg-primary-fixed-dim/20'
+          : 'border border-transparent hover:bg-surface-container-low'
       }`}
     >
-      <PlatformIcon platform={conversation.platform} />
+      {isActive && <div className="absolute bottom-0 left-0 top-0 w-1 rounded-l-lg bg-primary" />}
+      <Avatar name={conversation.customerDisplayName} />
       <div className="min-w-0 flex-1">
-        <div className="flex items-center justify-between">
-          <span className="truncate text-[13px] font-medium">{conversation.customerDisplayName}</span>
-          <span className="shrink-0 text-[11px] text-on-surface-variant">
+        <div className="mb-[2px] flex items-start justify-between">
+          <span className="truncate text-sm font-semibold text-foreground">
+            {conversation.customerDisplayName}
+          </span>
+          <span className="shrink-0 whitespace-nowrap text-[10px] font-semibold tracking-wide text-on-surface-variant">
             {formatTime(conversation.lastMessageAtMs, t)}
           </span>
         </div>
-        <div className="flex items-center justify-between">
-          <span className="truncate text-xs text-muted-foreground">
-            {conversation.lastMessageText}
-          </span>
+        <p className="truncate text-[13px] text-on-surface-variant">
+          {conversation.lastMessageText}
+        </p>
+        <div className="mt-xs flex items-center gap-xs">
+          <PlatformPill platform={conversation.platform} />
           {conversation.unreadCount > 0 && (
-            <span className="ml-2 flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-primary px-1.5 text-xs font-medium text-primary-foreground">
+            <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-error text-[10px] font-semibold text-on-error">
               {conversation.unreadCount > 99 ? '99+' : conversation.unreadCount}
             </span>
           )}
@@ -89,7 +104,7 @@ export function ConversationList({ conversations, currentId, onSelect }: Convers
   }
 
   return (
-    <div className="flex flex-col gap-0.5">
+    <div className="flex flex-col gap-xs">
       {conversations.map((c) => (
         <ConversationItem
           key={c.conversationId}

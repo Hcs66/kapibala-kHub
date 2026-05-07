@@ -43,27 +43,34 @@ export function TranslatePreview({ text, targetLang, onConfirmSend }: TranslateP
   if (!text.trim()) return null
 
   return (
-    <div className="border-t border-border bg-white/78 px-4 py-2.5 backdrop-blur-[16px]">
-      <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-        <Languages className="h-3.5 w-3.5" />
-        <span>{t('translate.preview')}</span>
-      </div>
-      <div className="mt-1.5 flex flex-col gap-1">
-        <p className="text-xs text-muted-foreground">{t('translate.original')}：{text}</p>
-        {loading ? (
-          <div className="flex items-center gap-1.5">
-            <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />
-            <span className="text-xs text-muted-foreground">{t('translate.translating')}</span>
-          </div>
-        ) : translatedText ? (
-          <p className="text-xs font-medium">{t('translate.translated')}：{translatedText}</p>
-        ) : null}
+    <div className="shrink-0 border-t border-surface-container-highest bg-surface-container-low px-md py-sm">
+      <div className="relative rounded-lg border border-outline-variant/40 bg-surface-container-low p-sm">
+        <div className="absolute right-2 top-2">
+          <span className="rounded bg-primary-container/10 px-2 py-1 text-[10px] font-semibold text-primary">
+            {t('translate.targetLang')}: {targetLang.toUpperCase()}
+          </span>
+        </div>
+        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+          <Languages className="h-3.5 w-3.5" />
+          <span>{t('translate.preview')}</span>
+        </div>
+        <p className="mb-2 mt-1.5 min-h-[20px] text-[13px] text-on-surface-variant">{text}</p>
+        <div className="border-t border-outline-variant/30 pt-2">
+          {loading ? (
+            <div className="flex items-center gap-1.5">
+              <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />
+              <span className="text-[13px] text-muted-foreground">{t('translate.translating')}</span>
+            </div>
+          ) : translatedText ? (
+            <p className="text-[13px] font-medium text-primary">{translatedText}</p>
+          ) : null}
+        </div>
       </div>
       {translatedText && !loading && (
         <button
           type="button"
           onClick={handleConfirm}
-          className="mt-2 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground transition-colors hover:bg-primary-dim"
+          className="mt-sm rounded-lg bg-primary px-4 py-1.5 text-xs font-medium text-primary-foreground shadow-sm transition-colors hover:bg-primary-dim active:scale-95"
         >
           {t('translate.confirmSend')}
         </button>

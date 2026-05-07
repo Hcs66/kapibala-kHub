@@ -6,6 +6,7 @@ export const en = {
     cancel: 'Cancel',
     loading: 'Loading...',
     allPlatforms: 'All Platforms',
+    online: 'Online',
   },
   auth: {
     title: 'kHub Sales Workbench',
@@ -20,9 +21,10 @@ export const en = {
     dataProtected: 'Data encrypted & protected',
   },
   workbench: {
-    title: 'kHub Workbench',
-    searchPlaceholder: 'Search conversations...',
+    title: 'Active Sessions',
+    searchPlaceholder: 'Search conversations, leads...',
     aiAnalysis: 'AI Analysis',
+    contactSubtitle: 'Contact',
   },
   conversation: {
     empty: 'No conversations',
@@ -34,10 +36,13 @@ export const en = {
   },
   message: {
     selectConversation: 'Select a conversation to start chatting',
-    inputPlaceholder: 'Type a message...',
+    inputPlaceholder: 'Type your message...',
     inputDisabledPlaceholder: 'Select a conversation first',
     showOriginal: 'Original',
     showTranslation: 'Translated',
+    autoTranslate: 'Auto-Translate',
+    original: 'Original',
+    translatedFrom: 'Translated',
     newMessages: '{{count}} new messages',
     loadingMore: 'Loading more...',
   },
@@ -47,6 +52,7 @@ export const en = {
     translated: 'Translated',
     translating: 'Translating...',
     confirmSend: 'Confirm & Send',
+    targetLang: 'Translating to',
   },
   analysis: {
     loadingAnalysis: 'Loading analysis...',
@@ -58,6 +64,11 @@ export const en = {
     nextAction: 'Suggested Action',
     evidence: 'Evidence',
     suggestedReplies: 'Suggested Replies',
+    sentiment: 'Sentiment Analysis',
+    positive: 'Positive',
+    probability: 'Probability',
+    accountOverview: 'Account Overview',
+    suggestion: 'Quick Reply',
   },
   account: {
     disconnected: 'Disconnected',
@@ -68,5 +79,25 @@ export const en = {
     connecting: 'Connecting...',
     disconnected: 'Connection lost, reconnecting...',
     reconnecting: 'Reconnecting...',
+  },
+  layout: {
+    appName: 'kHub',
+    sidebar: {
+      dashboard: 'Dashboard',
+      leads: 'Leads',
+      conversations: 'Conversations',
+      opportunities: 'Opportunities',
+      accounts: 'Accounts',
+      analytics: 'Analytics',
+      help: 'Help',
+      collapse: 'Collapse sidebar',
+      expand: 'Expand sidebar',
+    },
+    topbar: {
+      searchPlaceholder: 'Search conversations, leads...',
+      notifications: 'Notifications',
+      settings: 'Settings',
+      profile: 'Profile',
+    },
   },
 }

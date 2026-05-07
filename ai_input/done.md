@@ -248,3 +248,71 @@ connector接 TG/WA 走 HTTP（与现有 Go:9800 风格一致）。
 - 销售工作台prd: docs/v1/kHub_workbench_prd_v1.md
 
 ---
+根据已有文档，包括完整计划、产品文档、技术方案，生成AGENTS.md文件：
+
+- 根目录kHub为总项目库，所有项目采用monorepo组织，销售工作台为其中一个独立项目
+- 本项目只负责实现工作台销售台
+- 基于已确定的技术栈
+- 尽量考虑全面，但要简练
+
+---
+应用design sysyem:
+
+- google stich design system: docs/design/design.md
+- 调整AGENTS.md
+- 调整相关ui和样式定义
+
+---
+调整AGENTS.md，更新i18n相关内容
+---
+优化登录页
+
+## 说明
+
+- 优化登录页：apps/workbench/src/pages/LoginPage.tsx
+- 先参考设计图：ai_input/resources/screenshots/workbench_login.png
+- 优化UI/UX
+
+---
+优化登录页
+
+## 说明
+
+- 优化登录页：apps/workbench/src/pages/LoginPage.tsx
+- 先参考设计图：ai_input/resources/screenshots/workbench_login.png
+- 优化UI/UX
+
+
+---
+
+优化UI/UX
+
+## 说明
+
+- 优化对话页：apps/workbench/src/pages/WorkbenchPage.tsx
+- 优化相关组件和功能
+- 参考设计图和html：
+    - 设计图：ai_input/resources/conversations/workbench_conversations.png
+    - code: ai_input/resources/conversations/code.html
+
+---
+实现侧边栏和顶部：
+
+## 说明
+- 先不用实现具体功能，所有相关菜单仅实现入口即可，后续实现对应模块
+- 参考设计图，补全没有实现的侧边栏和顶部栏
+    - 设计图：ai_input/resources/conversations/workbench_conversations.png
+    - 侧边栏和顶部栏为全局框架，应用与所有页面
+
+## 侧边栏
+- 结构（从上到下）：1：顶部为app的logo、名称；2：菜单栏（图标+名称）；3：帮助；
+- 侧边栏支持展开和折叠（折叠时仅显示菜单图标）
+
+## 顶部栏
+- 结构（从左到右）：左侧：全局搜索框；右侧：通知、设置、用户头像
+
+---
+
+再次阅读plan、需求、demo计划，看看有没有没覆盖到的功能和细节点
+
+---

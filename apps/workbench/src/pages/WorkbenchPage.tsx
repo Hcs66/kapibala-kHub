@@ -193,7 +193,7 @@ export function WorkbenchPage(): React.ReactElement {
   })
 
   return (
-    <div className="flex h-svh flex-col">
+    <div className="flex h-full flex-col overflow-hidden">
       {wsStatus !== 'connected' && (
         <div className="flex items-center justify-center bg-error-container px-4 py-1.5 text-xs text-on-error-container">
           {wsStatus === 'connecting' && t('ws.connecting')}
@@ -203,29 +203,28 @@ export function WorkbenchPage(): React.ReactElement {
       )}
       <AccountStatusBar accounts={accounts} />
 
-      <div className="flex flex-1 overflow-hidden">
-        <aside className="hidden w-64 shrink-0 flex-col border-r border-border bg-white/78 backdrop-blur-[16px] md:flex">
-          <div className="flex h-12 items-center justify-between border-b border-border px-4">
-            <span className="text-sm font-semibold">{t('workbench.title')}</span>
+      <div className="flex flex-1 gap-md overflow-hidden p-md">
+        <aside className="hidden w-[300px] shrink-0 flex-col overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest shadow-soft md:flex">
+          <div className="flex items-center justify-between border-b border-surface-container-highest bg-surface-bright p-md">
+            <span className="text-[16px] font-semibold text-foreground">{t('workbench.title')}</span>
             <button
               type="button"
               onClick={() => changeLanguage(i18n.language === 'zh' ? 'en' : 'zh')}
-              className="flex items-center gap-1 rounded-md px-2 py-1 text-xs text-muted-foreground transition-colors hover:bg-accent"
+              className="rounded-full p-xs text-primary transition-colors hover:bg-surface-container-low"
             >
-              <Globe className="h-3.5 w-3.5" />
-              {i18n.language === 'zh' ? 'EN' : '中'}
+              <Globe className="h-[18px] w-[18px]" />
             </button>
           </div>
 
-          <div className="flex flex-col gap-2 border-b border-border p-3">
-            <div className="flex items-center gap-1.5 rounded-md border border-border bg-surface-container-lowest px-2.5 py-1.5 transition-colors focus-within:border-primary focus-within:ring-2 focus-within:ring-primary-glow">
-              <Search className="h-3.5 w-3.5 text-muted-foreground" />
+          <div className="flex flex-col gap-2 border-b border-surface-container-highest p-sm">
+            <div className="flex items-center gap-2 rounded-lg border border-outline-variant bg-surface-container-lowest px-sm py-[6px] shadow-sm transition-all focus-within:border-primary focus-within:ring-2 focus-within:ring-primary-glow">
+              <Search className="h-4 w-4 text-outline-variant" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder={t('workbench.searchPlaceholder')}
-                className="flex-1 bg-transparent text-xs outline-none placeholder:text-muted-foreground"
+                className="flex-1 bg-transparent text-sm outline-none placeholder:text-outline-variant"
               />
             </div>
             <div className="flex items-center gap-1.5">
@@ -233,7 +232,7 @@ export function WorkbenchPage(): React.ReactElement {
               <select
                 value={platformFilter}
                 onChange={(e) => setPlatformFilter(e.target.value)}
-                className="flex-1 rounded-md border border-border bg-surface-container-lowest px-2 py-1 text-xs outline-none focus:border-primary focus:ring-2 focus:ring-primary-glow"
+                className="flex-1 rounded-lg border border-outline-variant bg-surface-container-lowest px-2 py-1 text-xs outline-none focus:border-primary focus:ring-2 focus:ring-primary-glow"
               >
                 <option value="">{t('common.allPlatforms')}</option>
                 <option value="telegram">Telegram</option>
@@ -242,7 +241,7 @@ export function WorkbenchPage(): React.ReactElement {
             </div>
           </div>
 
-          <div className="flex-1 overflow-y-auto p-2">
+          <div className="custom-scrollbar flex-1 overflow-y-auto p-xs">
             {conversationLoading ? (
               <ConversationSkeleton count={6} />
             ) : (
@@ -255,7 +254,7 @@ export function WorkbenchPage(): React.ReactElement {
           </div>
         </aside>
 
-        <main className="flex flex-1 flex-col">
+        <main className="flex min-w-[400px] flex-1 flex-col overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest shadow-soft">
           <MessagePanel
             messages={messages}
             showTranslation={showTranslation}
@@ -282,10 +281,7 @@ export function WorkbenchPage(): React.ReactElement {
           />
         </main>
 
-        <aside className="hidden w-80 shrink-0 flex-col border-l border-border bg-white/78 backdrop-blur-[16px] lg:flex">
-          <div className="flex h-12 items-center border-b border-border px-4">
-            <span className="text-sm font-semibold">{t('workbench.aiAnalysis')}</span>
-          </div>
+        <aside className="custom-scrollbar hidden w-[320px] shrink-0 flex-col gap-md overflow-y-auto lg:flex">
           <AnalysisSidebar
             analysis={analysis}
             suggestedReplies={suggestedReplies}
