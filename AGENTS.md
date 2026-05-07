@@ -106,10 +106,10 @@ kapibala-kHub/                  # monorepo root
 
 ```
 src/
-  app/              # 应用入口、路由、providers
-  pages/            # 页面级组件（对应路由）
-  features/         # 功能模块（自包含）
+  app/              # 应用入口、路由、providers、共享主框架布局（Layout）
+  features/         # 功能模块（自包含，每个模块拥有独立页面）
     {feature}/
+      pages/        # 模块独立页面（对应路由，由主框架 Layout 包裹）
       components/   # 模块内组件（如有多个）
       hooks/        # 模块内 hooks
       types.ts      # 模块内类型
@@ -122,6 +122,43 @@ src/
     utils/          # 工具函数
   stores/           # Zustand stores
   mocks/            # Mock 数据和场景
+```
+
+### 页面与路由规范
+
+- **主框架布局（Layout）** 定义在 `src/app/` 中，所有模块页面共享同一个顶层 Layout（如导航栏、侧边栏骨架）
+- **每个独立功能模块在自己的 feature 目录下拥有独立的 `pages/` 子目录**，存放该模块对应的页面级组件
+- 路由配置统一在 `src/app/` 中注册，引用各 feature 的页面组件，通过嵌套路由实现 Layout 共享
+- 模块页面通过 React Router 的 `<Outlet />` 嵌套在主框架 Layout 内渲染
+- **禁止**在 `src/app/` 中直接编写业务页面逻辑——`app/` 只负责路由声明和 Layout 骨架
+- 各模块页面之间保持解耦，跨模块通信走 Zustand store 或 URL 参数，不允许直接 import 其他 feature 的内部组件
+
+**示例路由结构：**
+
+```
+src/app/routes.tsx          # 路由注册（引用各 feature 页面）
+src/app/Layout.tsx          # 共享主框架（导航、侧边栏骨架）
+
+src/features/conversation/
+  pages/
+    ConversationPage.tsx    # 会话主页面
+  components/
+    ConversationList.tsx
+    MessageArea.tsx
+  hooks/
+    useConversations.ts
+
+src/features/account/
+  pages/
+    AccountPage.tsx         # 账号管理页面
+  components/
+    AccountStatusCard.tsx
+
+src/features/analysis/
+  pages/
+    AnalysisPage.tsx        # 分析侧栏页面（或面板）
+  components/
+    AnalysisSummary.tsx
 ```
 
 ### Naming
