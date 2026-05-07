@@ -4,6 +4,19 @@ import { Search, Plus, X, Trash2 } from 'lucide-react'
 import { useTagStore } from '@/stores/tagStore'
 import { useConversationStore } from '@/stores/conversationStore'
 
+const PRESET_COLORS = [
+  '#6366f1',
+  '#f59e0b',
+  '#10b981',
+  '#ef4444',
+  '#f97316',
+  '#8b5cf6',
+  '#06b6d4',
+  '#ec4899',
+  '#84cc16',
+  '#14b8a6',
+]
+
 interface TagPopoverProps {
   open: boolean
   onClose: () => void
@@ -20,6 +33,7 @@ export function TagPopover({ open, onClose }: TagPopoverProps): React.ReactEleme
   const [searchQuery, setSearchQuery] = useState('')
   const [isCreating, setIsCreating] = useState(false)
   const [newTagName, setNewTagName] = useState('')
+  const [selectedColor, setSelectedColor] = useState(PRESET_COLORS[0])
   const popoverRef = useRef<HTMLDivElement>(null)
   const searchInputRef = useRef<HTMLInputElement>(null)
 
@@ -45,6 +59,7 @@ export function TagPopover({ open, onClose }: TagPopoverProps): React.ReactEleme
       setSearchQuery('')
       setIsCreating(false)
       setNewTagName('')
+      setSelectedColor(PRESET_COLORS[0])
     }
   }, [open])
 
@@ -55,10 +70,9 @@ export function TagPopover({ open, onClose }: TagPopoverProps): React.ReactEleme
   const handleCreateTag = async (): Promise<void> => {
     const name = newTagName.trim()
     if (!name) return
-    const colors = ['#6366f1', '#f59e0b', '#10b981', '#ef4444', '#f97316', '#8b5cf6', '#06b6d4']
-    const color = colors[Math.floor(Math.random() * colors.length)]
-    await createTag(name, color)
+    await createTag(name, selectedColor)
     setNewTagName('')
+    setSelectedColor(PRESET_COLORS[0])
     setIsCreating(false)
   }
 
@@ -140,34 +154,54 @@ export function TagPopover({ open, onClose }: TagPopoverProps): React.ReactEleme
 
       <div className="border-t border-surface-container-highest p-xs">
         {isCreating ? (
-          <div className="flex items-center gap-2 px-xs">
-            <input
-              type="text"
-              value={newTagName}
-              onChange={(e) => setNewTagName(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') void handleCreateTag()
-                if (e.key === 'Escape') setIsCreating(false)
-              }}
-              placeholder={t('conversation.newTagPlaceholder')}
-              className="flex-1 rounded border border-outline-variant bg-transparent px-2 py-1 text-xs outline-none focus:border-primary"
-              autoFocus
-            />
-            <button
-              type="button"
-              onClick={() => void handleCreateTag()}
-              disabled={!newTagName.trim()}
-              className="rounded bg-primary px-2 py-1 text-[10px] font-medium text-on-primary transition-colors disabled:opacity-50"
-            >
-              {t('common.confirm')}
-            </button>
-            <button
-              type="button"
-              onClick={() => setIsCreating(false)}
-              className="text-on-surface-variant hover:text-foreground"
-            >
-              <X className="h-3.5 w-3.5" />
-            </button>
+          <div className="flex flex-col gap-2 px-xs">
+            <div className="flex items-center gap-2">
+              <input
+                type="text"
+                value={newTagName}
+                onChange={(e) => setNewTagName(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') void handleCreateTag()
+                  if (e.key === 'Escape') setIsCreating(false)
+                }}
+                placeholder={t('conversation.newTagPlaceholder')}
+                className="flex-1 rounded border border-outline-variant bg-transparent px-2 py-1 text-xs outline-none focus:border-primary"
+                autoFocus
+              />
+              <button
+                type="button"
+                onClick={() => void handleCreateTag()}
+                disabled={!newTagName.trim()}
+                className="rounded bg-primary px-2 py-1 text-[10px] font-medium text-on-primary transition-colors disabled:opacity-50"
+              >
+                {t('common.confirm')}
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsCreating(false)}
+                className="text-on-surface-variant hover:text-foreground"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            </div>
+            <div className="flex items-center gap-1">
+              <span className="mr-1 text-[10px] text-on-surface-variant">{t('conversation.tagColor')}</span>
+              {PRESET_COLORS.map((color) => (
+                <button
+                  key={color}
+                  type="button"
+                  onClick={() => setSelectedColor(color)}
+                  className={`flex h-4 w-4 items-center justify-center rounded-full transition-transform ${
+                    selectedColor === color ? 'scale-125 ring-2 ring-offset-1 ring-primary/40' : 'hover:scale-110'
+                  }`}
+                  style={{ backgroundColor: color }}
+                >
+                  {selectedColor === color && (
+                    <span className="text-[8px] font-bold text-white">✓</span>
+                  )}
+                </button>
+              ))}
+            </div>
           </div>
         ) : (
           <button

@@ -43,6 +43,8 @@ export const en = {
     createTag: 'Create new tag',
     deleteTag: 'Delete tag',
     newTagPlaceholder: 'Enter tag name',
+    tagColor: 'Color',
+    assignTags: 'Tags',
   },
   message: {
     selectConversation: 'Select a conversation to start chatting',

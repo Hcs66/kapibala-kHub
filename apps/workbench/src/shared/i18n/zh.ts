@@ -43,6 +43,8 @@ export const zh = {
     createTag: '创建新标签',
     deleteTag: '删除标签',
     newTagPlaceholder: '输入标签名称',
+    tagColor: '颜色',
+    assignTags: '标签',
   },
   message: {
     selectConversation: '选择一个会话开始聊天',
