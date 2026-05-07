@@ -124,7 +124,7 @@ export function MessagePanel({
   }
 
   return (
-    <div className="relative flex flex-1 flex-col">
+    <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden">
       <div className="flex h-[60px] shrink-0 items-center justify-between border-b border-surface-container-highest bg-surface-bright px-md">
         <div className="flex items-center gap-md">
           <div className="flex h-10 w-10 items-center justify-center rounded-full bg-secondary-container text-sm font-bold text-primary">

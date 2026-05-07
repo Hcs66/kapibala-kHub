@@ -1,5 +1,4 @@
 import { useEffect, useState, useCallback, useRef } from 'react'
-import { Search, Filter, Globe } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { useConversationStore } from '@/stores/conversationStore'
 import { useMessageStore } from '@/stores/messageStore'
@@ -10,9 +9,9 @@ import { AnalysisSidebar } from '@/features/analysis/AnalysisSidebar'
 import { AccountStatusBar } from '@/features/accounts/AccountStatusBar'
 import { TranslatePreview } from '@/features/translate/TranslatePreview'
 import { ConversationSkeleton } from '@/features/messages/MessageSkeleton'
+import { PlatformTabs } from '@/features/conversations/PlatformTabs'
 import { mockClient } from '@/shared/api/mockClient'
 import { createMockWs } from '@/shared/ws/mockWs'
-import { changeLanguage } from '@/shared/i18n'
 import type { MessageDTO, AnalysisSummaryDTO, AccountStatusDTO, ServerPushEvent } from '@/shared/api/types'
 import type { WsConnectionStatus } from '@/shared/ws/client'
 import type { SuggestedReply } from '@/mocks/data'
@@ -27,7 +26,7 @@ function getWsOptions(): { simulateDisconnect?: boolean; disconnectAfterMs?: num
 }
 
 export function WorkbenchPage(): React.ReactElement {
-  const { t, i18n } = useTranslation()
+  const { t } = useTranslation()
   const conversations = useConversationStore((s) => s.conversations)
   const currentId = useConversationStore((s) => s.currentConversationId)
   const conversationLoading = useConversationStore((s) => s.loading)
@@ -51,7 +50,6 @@ export function WorkbenchPage(): React.ReactElement {
   const setMessageLoading = useMessageStore((s) => s.setLoading)
 
   const [analysis, setAnalysis] = useState<AnalysisSummaryDTO | null>(null)
-  const [searchQuery, setSearchQuery] = useState('')
   const [platformFilter, setPlatformFilter] = useState<string>('')
   const [accounts, setAccounts] = useState<AccountStatusDTO[]>([])
   const [wsStatus, setWsStatus] = useState<WsConnectionStatus>('disconnected')
@@ -185,10 +183,6 @@ export function WorkbenchPage(): React.ReactElement {
 
   const filteredConversations = conversations.filter((c) => {
     if (platformFilter && c.platform !== platformFilter) return false
-    if (searchQuery) {
-      const q = searchQuery.toLowerCase()
-      return c.customerDisplayName.toLowerCase().includes(q) || c.lastMessageText.toLowerCase().includes(q)
-    }
     return true
   })
 
@@ -207,39 +201,9 @@ export function WorkbenchPage(): React.ReactElement {
         <aside className="hidden w-[300px] shrink-0 flex-col overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest shadow-soft md:flex">
           <div className="flex items-center justify-between border-b border-surface-container-highest bg-surface-bright p-md">
             <span className="text-[16px] font-semibold text-foreground">{t('workbench.title')}</span>
-            <button
-              type="button"
-              onClick={() => changeLanguage(i18n.language === 'zh' ? 'en' : 'zh')}
-              className="rounded-full p-xs text-primary transition-colors hover:bg-surface-container-low"
-            >
-              <Globe className="h-[18px] w-[18px]" />
-            </button>
           </div>
 
-          <div className="flex flex-col gap-2 border-b border-surface-container-highest p-sm">
-            <div className="flex items-center gap-2 rounded-lg border border-outline-variant bg-surface-container-lowest px-sm py-[6px] shadow-sm transition-all focus-within:border-primary focus-within:ring-2 focus-within:ring-primary-glow">
-              <Search className="h-4 w-4 text-outline-variant" />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder={t('workbench.searchPlaceholder')}
-                className="flex-1 bg-transparent text-sm outline-none placeholder:text-outline-variant"
-              />
-            </div>
-            <div className="flex items-center gap-1.5">
-              <Filter className="h-3.5 w-3.5 text-muted-foreground" />
-              <select
-                value={platformFilter}
-                onChange={(e) => setPlatformFilter(e.target.value)}
-                className="flex-1 rounded-lg border border-outline-variant bg-surface-container-lowest px-2 py-1 text-xs outline-none focus:border-primary focus:ring-2 focus:ring-primary-glow"
-              >
-                <option value="">{t('common.allPlatforms')}</option>
-                <option value="telegram">Telegram</option>
-                <option value="whatsapp">WhatsApp</option>
-              </select>
-            </div>
-          </div>
+          <PlatformTabs value={platformFilter} onChange={setPlatformFilter} />
 
           <div className="custom-scrollbar flex-1 overflow-y-auto p-xs">
             {conversationLoading ? (
