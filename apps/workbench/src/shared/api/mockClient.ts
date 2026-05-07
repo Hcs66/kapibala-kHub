@@ -13,8 +13,9 @@ import type {
   AnalysisSummaryDTO,
   AccountStatusDTO,
   CurrentUserDTO,
+  TagDTO,
 } from './types'
-import { mockConversations, mockMessages, mockAccounts, mockAccountsDisconnected, mockAnalysis, mockHistoryMessages, mockSuggestedReplies } from '@/mocks/data'
+import { mockConversations, mockMessages, mockAccounts, mockAccountsDisconnected, mockAnalysis, mockHistoryMessages, mockSuggestedReplies, mockTags } from '@/mocks/data'
 import type { SuggestedReply, MockScenario } from '@/mocks/data'
 
 function delay(ms: number): Promise<void> {
@@ -175,5 +176,45 @@ export const mockClient: MockClientExtended = {
 
   getSuggestedReplies(conversationId: string): SuggestedReply[] {
     return mockSuggestedReplies[conversationId] ?? []
+  },
+
+  async listTags(): Promise<TagDTO[]> {
+    await delay(200)
+    return [...mockTags]
+  },
+
+  async createTag(input: { name: string; color?: string }): Promise<TagDTO> {
+    await delay(300)
+    const newTag: TagDTO = {
+      tagId: `tag_${Date.now()}`,
+      name: input.name,
+      color: input.color,
+      createdAtMs: Date.now(),
+    }
+    mockTags.push(newTag)
+    return newTag
+  },
+
+  async deleteTag(tagId: string): Promise<void> {
+    await delay(200)
+    const idx = mockTags.findIndex((t) => t.tagId === tagId)
+    if (idx !== -1) mockTags.splice(idx, 1)
+  },
+
+  async addTagToConversation(conversationId: string, tagId: string): Promise<void> {
+    await delay(200)
+    const conv = mockConversations.find((c) => c.conversationId === conversationId)
+    if (conv) {
+      if (!conv.tags) conv.tags = []
+      if (!conv.tags.includes(tagId)) conv.tags.push(tagId)
+    }
+  },
+
+  async removeTagFromConversation(conversationId: string, tagId: string): Promise<void> {
+    await delay(200)
+    const conv = mockConversations.find((c) => c.conversationId === conversationId)
+    if (conv?.tags) {
+      conv.tags = conv.tags.filter((t) => t !== tagId)
+    }
   },
 }

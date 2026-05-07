@@ -1,9 +1,13 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useConversationStore } from '@/stores/conversationStore'
+import { useTagStore } from '@/stores/tagStore'
 import { useMessageStore } from '@/stores/messageStore'
 import { ConversationList } from '@/features/conversations/ConversationList'
 import { PlatformTabs } from '@/features/conversations/PlatformTabs'
+import { ChatTypeTabs } from '@/features/conversations/ChatTypeTabs'
+import { TagFilterBar } from '@/features/conversations/TagFilterBar'
+import { TagPopover } from '@/features/conversations/TagPopover'
 import { useWorkbenchWs } from '@/features/conversations/hooks/useWorkbenchWs'
 import { useMessageActions } from '@/features/conversations/hooks/useMessageActions'
 import { MessagePanel, MessageInput, ConversationSkeleton } from '@/features/messages'
@@ -14,6 +18,8 @@ import { mockClient } from '@/shared/api/mockClient'
 import type { AnalysisSummaryDTO, AccountStatusDTO } from '@/shared/api/types'
 import type { SuggestedReply } from '@/mocks/data'
 
+const ACTIVE_THRESHOLD_MS = 24 * 60 * 60 * 1000
+
 export function ConversationPage(): React.ReactElement {
   const { t } = useTranslation()
   const conversations = useConversationStore((s) => s.conversations)
@@ -22,6 +28,12 @@ export function ConversationPage(): React.ReactElement {
   const setConversations = useConversationStore((s) => s.setConversations)
   const switchConversation = useConversationStore((s) => s.switchConversation)
   const setConversationLoading = useConversationStore((s) => s.setLoading)
+  const chatTypeFilter = useConversationStore((s) => s.chatTypeFilter)
+  const setChatTypeFilter = useConversationStore((s) => s.setChatTypeFilter)
+  const activeFilterOn = useConversationStore((s) => s.activeFilterOn)
+  const selectedTagIds = useConversationStore((s) => s.selectedTagIds)
+
+  const fetchTags = useTagStore((s) => s.fetchTags)
 
   const messages = useMessageStore((s) => s.messages)
   const showTranslation = useMessageStore((s) => s.showTranslation)
@@ -40,6 +52,7 @@ export function ConversationPage(): React.ReactElement {
   const [platformFilter, setPlatformFilter] = useState<string>('')
   const [accounts, setAccounts] = useState<AccountStatusDTO[]>([])
   const [suggestedReplies, setSuggestedReplies] = useState<SuggestedReply[]>([])
+  const [tagPopoverOpen, setTagPopoverOpen] = useState(false)
 
   useEffect(() => {
     setConversationLoading(true)
@@ -48,7 +61,8 @@ export function ConversationPage(): React.ReactElement {
       setConversationLoading(false)
     })
     void mockClient.listAccounts().then(setAccounts)
-  }, [setConversations, setConversationLoading])
+    void fetchTags()
+  }, [setConversations, setConversationLoading, fetchTags])
 
   useEffect(() => {
     if (!currentId) {
@@ -75,6 +89,13 @@ export function ConversationPage(): React.ReactElement {
 
   const filteredConversations = conversations.filter((c) => {
     if (platformFilter && c.platform !== platformFilter) return false
+    if (chatTypeFilter !== 'all' && c.chatType !== chatTypeFilter) return false
+    if (activeFilterOn) {
+      if (c.lastMessageAtMs < Date.now() - ACTIVE_THRESHOLD_MS) return false
+    }
+    if (selectedTagIds.length > 0) {
+      if (!selectedTagIds.every((tagId) => c.tags?.includes(tagId))) return false
+    }
     return true
   })
 
@@ -96,6 +117,12 @@ export function ConversationPage(): React.ReactElement {
           </div>
 
           <PlatformTabs value={platformFilter} onChange={setPlatformFilter} />
+          <ChatTypeTabs value={chatTypeFilter} onChange={setChatTypeFilter} />
+
+          <div className="relative">
+            <TagFilterBar onOpenTagPopover={() => setTagPopoverOpen(true)} />
+            <TagPopover open={tagPopoverOpen} onClose={() => setTagPopoverOpen(false)} />
+          </div>
 
           <div className="custom-scrollbar flex-1 overflow-y-auto p-xs">
             {conversationLoading ? (

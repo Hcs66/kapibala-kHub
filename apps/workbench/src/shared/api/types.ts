@@ -13,6 +13,7 @@ export interface CurrentUserDTO {
 export interface ConversationDTO {
   conversationId: string
   platform: 'telegram' | 'whatsapp' | 'line' | 'zalo' | string
+  chatType: 'single' | 'group'
   accountId: string
   accountDisplayName: string
   customerDisplayName: string
@@ -20,9 +21,17 @@ export interface ConversationDTO {
   lastMessageText: string
   lastMessageAtMs: number
   unreadCount: number
+  tags?: string[]
   stage?: string
   riskLevel?: 'low' | 'medium' | 'high' | 'unknown'
   analysisSummary?: string
+}
+
+export interface TagDTO {
+  tagId: string
+  name: string
+  color?: string
+  createdAtMs: number
 }
 
 export interface MessageDTO {
@@ -93,6 +102,8 @@ export interface ConversationListQuery {
   limit?: number
   platform?: string
   search?: string
+  chatType?: 'single' | 'group'
+  tags?: string[]
 }
 
 export interface ConversationListResult {
@@ -130,3 +141,4 @@ export type ServerPushEvent =
   | { type: 'account.status_changed'; payload: AccountStatusDTO }
   | { type: 'analysis.updated'; payload: AnalysisSummaryDTO }
   | { type: 'visibility.changed'; payload: { scope: string; version: string } }
+  | { type: 'conversation.tag_changed'; payload: { conversationId: string; tags: string[] } }

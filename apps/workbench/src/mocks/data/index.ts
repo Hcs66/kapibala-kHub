@@ -1,4 +1,4 @@
-import type { ConversationDTO, MessageDTO, AccountStatusDTO, AnalysisSummaryDTO } from '@/shared/api/types'
+import type { ConversationDTO, MessageDTO, AccountStatusDTO, AnalysisSummaryDTO, TagDTO } from '@/shared/api/types'
 
 export interface SuggestedReply {
   id: string
@@ -11,10 +11,19 @@ const now = Date.now()
 const minute = 60_000
 const hour = 3_600_000
 
+export const mockTags: TagDTO[] = [
+  { tagId: 'tag_vip', name: 'VIP', color: '#f59e0b', createdAtMs: now - 30 * 24 * hour },
+  { tagId: 'tag_wholesale', name: '批发', color: '#10b981', createdAtMs: now - 25 * 24 * hour },
+  { tagId: 'tag_new_lead', name: '新线索', color: '#6366f1', createdAtMs: now - 20 * 24 * hour },
+  { tagId: 'tag_follow_up', name: '待跟进', color: '#f97316', createdAtMs: now - 15 * 24 * hour },
+  { tagId: 'tag_high_intent', name: '高意向', color: '#ef4444', createdAtMs: now - 10 * 24 * hour },
+]
+
 export const mockConversations: ConversationDTO[] = [
   {
     conversationId: 'telegram::100001',
     platform: 'telegram',
+    chatType: 'single',
     accountId: 'acc_tg_01',
     accountDisplayName: 'TG 销售号1',
     customerDisplayName: '客户 A-382',
@@ -22,6 +31,7 @@ export const mockConversations: ConversationDTO[] = [
     lastMessageText: '你好，我想了解一下你们的产品价格',
     lastMessageAtMs: now - 2 * minute,
     unreadCount: 3,
+    tags: ['tag_new_lead'],
     stage: '需求探询',
     riskLevel: 'low',
     analysisSummary: '客户对产品价格感兴趣，处于初步了解阶段',
@@ -29,6 +39,7 @@ export const mockConversations: ConversationDTO[] = [
   {
     conversationId: 'whatsapp::200001',
     platform: 'whatsapp',
+    chatType: 'single',
     accountId: 'acc_wa_01',
     accountDisplayName: 'WA 销售号1',
     customerDisplayName: '客户 B-156',
@@ -36,6 +47,7 @@ export const mockConversations: ConversationDTO[] = [
     lastMessageText: 'Can you send me the catalog?',
     lastMessageAtMs: now - 15 * minute,
     unreadCount: 1,
+    tags: ['tag_follow_up'],
     stage: '初次接触',
     riskLevel: 'medium',
     analysisSummary: '客户要求发送产品目录，需要及时跟进',
@@ -43,6 +55,7 @@ export const mockConversations: ConversationDTO[] = [
   {
     conversationId: 'telegram::100002',
     platform: 'telegram',
+    chatType: 'single',
     accountId: 'acc_tg_01',
     accountDisplayName: 'TG 销售号1',
     customerDisplayName: '客户 C-891',
@@ -50,12 +63,14 @@ export const mockConversations: ConversationDTO[] = [
     lastMessageText: '好的，我考虑一下再回复你',
     lastMessageAtMs: now - 1 * hour,
     unreadCount: 0,
+    tags: ['tag_vip', 'tag_high_intent'],
     stage: '报价阶段',
     riskLevel: 'low',
   },
   {
     conversationId: 'whatsapp::200002',
     platform: 'whatsapp',
+    chatType: 'single',
     accountId: 'acc_wa_01',
     accountDisplayName: 'WA 销售号1',
     customerDisplayName: '客户 D-447',
@@ -63,6 +78,7 @@ export const mockConversations: ConversationDTO[] = [
     lastMessageText: 'The price is too high for us',
     lastMessageAtMs: now - 2 * hour,
     unreadCount: 0,
+    tags: ['tag_follow_up'],
     stage: '报价阶段',
     riskLevel: 'high',
     analysisSummary: '客户认为价格过高，存在流失风险',
@@ -70,6 +86,7 @@ export const mockConversations: ConversationDTO[] = [
   {
     conversationId: 'telegram::100003',
     platform: 'telegram',
+    chatType: 'group',
     accountId: 'acc_tg_01',
     accountDisplayName: 'TG 销售号1',
     customerDisplayName: '客户 E-223',
@@ -77,12 +94,14 @@ export const mockConversations: ConversationDTO[] = [
     lastMessageText: '什么时候可以发货？',
     lastMessageAtMs: now - 3 * hour,
     unreadCount: 2,
+    tags: ['tag_vip'],
     stage: '成交',
     riskLevel: 'low',
   },
   {
     conversationId: 'whatsapp::200003',
     platform: 'whatsapp',
+    chatType: 'single',
     accountId: 'acc_wa_01',
     accountDisplayName: 'WA 销售号1',
     customerDisplayName: '客户 F-678',
@@ -90,6 +109,7 @@ export const mockConversations: ConversationDTO[] = [
     lastMessageText: 'I need 500 units, what discount can you offer?',
     lastMessageAtMs: now - 4 * hour,
     unreadCount: 0,
+    tags: ['tag_wholesale', 'tag_high_intent'],
     stage: '需求探询',
     riskLevel: 'low',
     analysisSummary: '大单潜力客户，询问批量折扣',
@@ -97,6 +117,7 @@ export const mockConversations: ConversationDTO[] = [
   {
     conversationId: 'telegram::100004',
     platform: 'telegram',
+    chatType: 'single',
     accountId: 'acc_tg_01',
     accountDisplayName: 'TG 销售号1',
     customerDisplayName: '客户 G-112',
@@ -104,11 +125,13 @@ export const mockConversations: ConversationDTO[] = [
     lastMessageText: '收到，谢谢',
     lastMessageAtMs: now - 6 * hour,
     unreadCount: 0,
+    tags: ['tag_new_lead'],
     stage: '初次接触',
   },
   {
     conversationId: 'whatsapp::200004',
     platform: 'whatsapp',
+    chatType: 'group',
     accountId: 'acc_wa_01',
     accountDisplayName: 'WA 销售号1',
     customerDisplayName: '客户 H-934',
@@ -122,6 +145,7 @@ export const mockConversations: ConversationDTO[] = [
   {
     conversationId: 'telegram::100005',
     platform: 'telegram',
+    chatType: 'single',
     accountId: 'acc_tg_01',
     accountDisplayName: 'TG 销售号1',
     customerDisplayName: '客户 I-567',
@@ -129,12 +153,14 @@ export const mockConversations: ConversationDTO[] = [
     lastMessageText: '我们公司需要定制化方案',
     lastMessageAtMs: now - 12 * hour,
     unreadCount: 0,
+    tags: ['tag_wholesale'],
     stage: '需求探询',
     riskLevel: 'low',
   },
   {
     conversationId: 'whatsapp::200005',
     platform: 'whatsapp',
+    chatType: 'single',
     accountId: 'acc_wa_01',
     accountDisplayName: 'WA 销售号1',
     customerDisplayName: '客户 J-289',
@@ -147,6 +173,7 @@ export const mockConversations: ConversationDTO[] = [
   {
     conversationId: 'telegram::100006',
     platform: 'telegram',
+    chatType: 'group',
     accountId: 'acc_tg_01',
     accountDisplayName: 'TG 销售号1',
     customerDisplayName: '客户 K-445',

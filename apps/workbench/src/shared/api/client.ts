@@ -12,6 +12,7 @@ import type {
   AnalysisSummaryDTO,
   AccountStatusDTO,
   CurrentUserDTO,
+  TagDTO,
 } from './types'
 
 export interface WorkbenchApi {
@@ -23,6 +24,11 @@ export interface WorkbenchApi {
   translatePreview(input: TranslatePreviewRequest): Promise<TranslatePreviewResult>
   getAnalysisSummary(conversationId: string): Promise<AnalysisSummaryDTO>
   listAccounts(): Promise<AccountStatusDTO[]>
+  listTags(): Promise<TagDTO[]>
+  createTag(input: { name: string; color?: string }): Promise<TagDTO>
+  deleteTag(tagId: string): Promise<void>
+  addTagToConversation(conversationId: string, tagId: string): Promise<void>
+  removeTagFromConversation(conversationId: string, tagId: string): Promise<void>
 }
 
 export type { WorkbenchApi as default }

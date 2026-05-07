@@ -1,5 +1,8 @@
 export { ConversationPage } from './pages/ConversationPage'
 export { ConversationList, ConversationItem } from './ConversationList'
 export { PlatformTabs } from './PlatformTabs'
+export { ChatTypeTabs } from './ChatTypeTabs'
+export { TagFilterBar } from './TagFilterBar'
+export { TagPopover } from './TagPopover'
 export { useWorkbenchWs } from './hooks/useWorkbenchWs'
 export { useMessageActions } from './hooks/useMessageActions'
