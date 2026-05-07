@@ -36,7 +36,7 @@ kapibala-kHub/                  # monorepo root
 | Build | Vite |
 | Styling | Tailwind CSS |
 | UI Components | shadcn/ui |
-| Icons | lucide-react |
+| Icons | lucide-react + @icons-pack/react-simple-icons (brand icons) |
 | State Management | Zustand |
 | Data Fetching | TanStack Query (React Query) |
 | Virtual Scroll | @tanstack/virtual |
@@ -160,6 +160,21 @@ src/features/analysis/
   components/
     AnalysisSummary.tsx
 ```
+
+### Icons
+
+- **通用 UI 图标**：使用 `lucide-react`（如箭头、搜索、设置、消息气泡等）
+- **品牌图标**：使用 `@icons-pack/react-simple-icons`（如 Telegram、WhatsApp、微信等第三方平台 logo）
+- 不允许手写 inline SVG 图标，所有图标必须从上述两个库导入
+- 用法示例：
+  ```tsx
+  // 通用 UI 图标
+  import { Search, Bell, MessageSquare } from 'lucide-react'
+  // 品牌图标
+  import { SiTelegram, SiWhatsapp } from '@icons-pack/react-simple-icons'
+  ```
+- 图标尺寸统一通过 Tailwind class 控制（如 `className="h-4 w-4"`）
+- 如需新增品牌图标，优先在 [Simple Icons](https://simpleicons.org/) 查找对应名称，导入格式为 `Si{BrandName}`
 
 ### Naming
 

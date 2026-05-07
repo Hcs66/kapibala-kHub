@@ -326,3 +326,9 @@ connector接 TG/WA 走 HTTP（与现有 Go:9800 风格一致）。
 - 信息面板（MessagePanel）无法滚动到底部，输入框看不见（应该固定在底部）
 
 ---
+继续优化：
+
+- 整合成熟的icon库，替换所有svg生成的icon
+- 更新AGENTS.md，将icon库使用信息写入
+
+---
