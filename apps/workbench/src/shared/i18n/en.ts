@@ -80,4 +80,24 @@ export const en = {
     disconnected: 'Connection lost, reconnecting...',
     reconnecting: 'Reconnecting...',
   },
+  layout: {
+    appName: 'kHub',
+    sidebar: {
+      dashboard: 'Dashboard',
+      leads: 'Leads',
+      conversations: 'Conversations',
+      opportunities: 'Opportunities',
+      accounts: 'Accounts',
+      analytics: 'Analytics',
+      help: 'Help',
+      collapse: 'Collapse sidebar',
+      expand: 'Expand sidebar',
+    },
+    topbar: {
+      searchPlaceholder: 'Search conversations, leads...',
+      notifications: 'Notifications',
+      settings: 'Settings',
+      profile: 'Profile',
+    },
+  },
 }

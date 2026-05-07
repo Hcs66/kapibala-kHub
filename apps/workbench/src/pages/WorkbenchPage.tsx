@@ -193,7 +193,7 @@ export function WorkbenchPage(): React.ReactElement {
   })
 
   return (
-    <div className="flex h-svh flex-col bg-background">
+    <div className="flex h-full flex-col overflow-hidden">
       {wsStatus !== 'connected' && (
         <div className="flex items-center justify-center bg-error-container px-4 py-1.5 text-xs text-on-error-container">
           {wsStatus === 'connecting' && t('ws.connecting')}

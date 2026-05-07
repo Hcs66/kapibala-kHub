@@ -80,4 +80,24 @@ export const zh = {
     disconnected: '连接已断开，尝试重连中...',
     reconnecting: '重连中...',
   },
+  layout: {
+    appName: 'kHub',
+    sidebar: {
+      dashboard: '仪表盘',
+      leads: '线索',
+      conversations: '会话',
+      opportunities: '商机',
+      accounts: '账户',
+      analytics: '分析',
+      help: '帮助',
+      collapse: '收起侧边栏',
+      expand: '展开侧边栏',
+    },
+    topbar: {
+      searchPlaceholder: '搜索会话、线索...',
+      notifications: '通知',
+      settings: '设置',
+      profile: '个人资料',
+    },
+  },
 }
