@@ -274,3 +274,45 @@ connector接 TG/WA 走 HTTP（与现有 Go:9800 风格一致）。
 - 优化UI/UX
 
 ---
+优化登录页
+
+## 说明
+
+- 优化登录页：apps/workbench/src/pages/LoginPage.tsx
+- 先参考设计图：ai_input/resources/screenshots/workbench_login.png
+- 优化UI/UX
+
+
+---
+
+优化UI/UX
+
+## 说明
+
+- 优化对话页：apps/workbench/src/pages/WorkbenchPage.tsx
+- 优化相关组件和功能
+- 参考设计图和html：
+    - 设计图：ai_input/resources/conversations/workbench_conversations.png
+    - code: ai_input/resources/conversations/code.html
+
+---
+实现侧边栏和顶部：
+
+## 说明
+- 先不用实现具体功能，所有相关菜单仅实现入口即可，后续实现对应模块
+- 参考设计图，补全没有实现的侧边栏和顶部栏
+    - 设计图：ai_input/resources/conversations/workbench_conversations.png
+    - 侧边栏和顶部栏为全局框架，应用与所有页面
+
+## 侧边栏
+- 结构（从上到下）：1：顶部为app的logo、名称；2：菜单栏（图标+名称）；3：帮助；
+- 侧边栏支持展开和折叠（折叠时仅显示菜单图标）
+
+## 顶部栏
+- 结构（从左到右）：左侧：全局搜索框；右侧：通知、设置、用户头像
+
+---
+
+再次阅读plan、需求、demo计划，看看有没有没覆盖到的功能和细节点
+
+---

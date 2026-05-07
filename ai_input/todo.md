@@ -1,20 +1,15 @@
-优化登录页
+根据现有的产品规划，帮我整理： 
+- 相关竞品研究 
+- 目前功能的完善程度 
+- 后续迭代建议
 
-## 说明
+--- 
 
-- 优化登录页：apps/workbench/src/pages/LoginPage.tsx
-- 先参考设计图：ai_input/resources/screenshots/workbench_login.png
-- 优化UI/UX
+继续优化：
 
-
----
-
-优化UI/UX
-
-## 说明
-
-- 优化对话页：apps/workbench/src/pages/WorkbenchPage.tsx
-- 优化相关组件和功能
-- 参考设计图和html：
-    - 设计图：ai_input/resources/conversations/workbench_conversations.png
-    - code: ai_input/resources/conversations/code.html
+## 会话（conversations）
+- 将会话功能从当前的主页面(WorkbenchPage)提取出来做成独立的页面
+- 语言切换功能调整到顶部栏右侧
+- 平台切换采用tab的方式，加上平台对应的图标
+- 移除搜框
+- 信息面板（MessagePanel）无法滚动到底部，输入框看不见（应该固定在底部）

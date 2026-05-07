@@ -30,7 +30,7 @@ export function AnalysisSidebar({ analysis, loading, suggestedReplies, onSuggest
   }
 
   return (
-    <div className="flex flex-1 flex-col gap-md overflow-y-auto custom-scrollbar pb-md">
+    <div className="flex flex-1 flex-col gap-md overflow-y-auto custom-scrollbar overflow-x-hidden pb-md">
       {analysis.stage && (
         <div className="rounded-xl border border-outline-variant bg-surface-container-lowest p-md shadow-soft">
           <div className="mb-sm flex items-center gap-2">
