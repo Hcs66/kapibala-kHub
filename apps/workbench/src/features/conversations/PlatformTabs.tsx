@@ -11,22 +11,22 @@ export function PlatformTabs({ value, onChange }: PlatformTabsProps): React.Reac
   const { t } = useTranslation()
 
   const tabs = [
-    { key: '', label: t('common.allPlatforms'), icon: <MessageCircle className="h-4 w-4" /> },
-    { key: 'telegram', label: 'Telegram', icon: <SiTelegram className="h-4 w-4" /> },
-    { key: 'whatsapp', label: 'WhatsApp', icon: <SiWhatsapp className="h-4 w-4" /> },
+    { key: '', label: t('common.allPlatforms'), icon: <MessageCircle className="h-3.5 w-3.5" /> },
+    { key: 'telegram', label: 'TG', icon: <SiTelegram className="h-3.5 w-3.5" /> },
+    { key: 'whatsapp', label: 'WA', icon: <SiWhatsapp className="h-3.5 w-3.5" /> },
   ]
 
   return (
-    <div className="flex border-b border-surface-container-highest">
+    <div className="flex items-center gap-xs border-b border-surface-container-highest px-sm py-[8px]">
       {tabs.map((tab) => (
         <button
           key={tab.key}
           type="button"
           onClick={() => onChange(tab.key)}
-          className={`flex flex-1 items-center justify-center gap-1.5 px-sm py-[10px] text-xs font-medium transition-colors ${
+          className={`flex items-center gap-1 rounded-full px-3 py-[5px] text-[11px] font-medium transition-colors ${
             value === tab.key
-              ? 'border-b-2 border-primary text-primary'
-              : 'text-on-surface-variant hover:bg-surface-container-low hover:text-foreground'
+              ? 'bg-primary text-on-primary shadow-sm'
+              : 'bg-surface-container-low text-on-surface-variant hover:bg-surface-container hover:text-foreground'
           }`}
         >
           {tab.icon}
