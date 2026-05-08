@@ -67,7 +67,7 @@ export function MessageBubble({ message, showTranslation, onRetry }: MessageBubb
   }
 
   return (
-    <div className={`flex gap-sm ${isOutbound ? 'flex-row-reverse self-end' : 'self-start'} max-w-[80%]`}>
+    <div className={`flex gap-sm ${isOutbound ? 'flex-row-reverse' : ''}`}>
       <MessageAvatar name={message.senderDisplayName} isOutbound={isOutbound} />
       <div className={`flex flex-col gap-1 ${isOutbound ? 'items-end' : 'items-start'}`}>
         <div
@@ -84,6 +84,13 @@ export function MessageBubble({ message, showTranslation, onRetry }: MessageBubb
             <p className="mb-1 text-[12px] italic text-outline-variant">
               {message.originalText}
             </p>
+          )}
+          {message.imageUrl && (
+            <img
+              src={message.imageUrl}
+              alt=""
+              className="mb-1.5 max-h-[200px] max-w-[260px] rounded-lg object-cover"
+            />
           )}
           <p className="whitespace-pre-wrap text-[14px]">{displayText}</p>
         </div>
@@ -136,7 +143,12 @@ export function TimeSeparator({ timestamp }: TimeSeparatorProps): React.ReactEle
   } else if (isYesterday) {
     label = `${t('conversation.yesterday')} ${formatMessageTime(timestamp)}`
   } else {
-    label = `${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${formatMessageTime(timestamp)}`
+    const isThisYear = date.getFullYear() === now.getFullYear()
+    if (isThisYear) {
+      label = `${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${formatMessageTime(timestamp)}`
+    } else {
+      label = `${String(date.getFullYear())}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${formatMessageTime(timestamp)}`
+    }
   }
 
   return (

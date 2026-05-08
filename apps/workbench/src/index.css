@@ -1,4 +1,4 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 @theme {
   --color-primary: #4f46e5;
@@ -68,15 +68,38 @@
 
   --shadow-soft: 0px 4px 20px rgba(0, 0, 0, 0.04);
   --shadow-card: 0px 2px 12px rgba(0, 0, 0, 0.03);
+  --shadow-elevated: 0px 8px 30px rgba(0, 0, 0, 0.08);
   --shadow-ai-glow: 0 0 15px -3px rgba(53, 37, 205, 0.15), 0 0 6px -2px rgba(53, 37, 205, 0.1);
 
   --animate-message-in: message-in 0.25s ease-out both;
+  --animate-fade-in: fade-in 0.2s ease-out both;
+  --animate-slide-up: slide-up 0.2s ease-out both;
 }
 
 @keyframes message-in {
   from {
     opacity: 0;
     transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
   }
   to {
     opacity: 1;
@@ -93,7 +116,9 @@
 
 .ai-border {
   border: 2px solid transparent;
-  background-image: linear-gradient(white, white), linear-gradient(135deg, var(--color-ai-border-start), var(--color-ai-border-end));
+  background-image:
+    linear-gradient(white, white),
+    linear-gradient(135deg, var(--color-ai-border-start), var(--color-ai-border-end));
   background-origin: border-box;
   background-clip: padding-box, border-box;
 }
@@ -111,10 +136,25 @@
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
 }
+.scrollbar-hide {
+  /* IE / Edge */
+  -ms-overflow-style: none;
+
+  /* Firefox */
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
 
 body {
   margin: 0;
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-family:
+    'Inter',
+    system-ui,
+    -apple-system,
+    sans-serif;
   font-size: 14px;
   line-height: 1.6;
   letter-spacing: 0;

@@ -5,12 +5,14 @@ import {
   LayoutDashboard,
   Users,
   MessageSquare,
-  TrendingUp,
+
   Building2,
   BarChart3,
   HelpCircle,
   PanelLeftClose,
   PanelLeftOpen,
+  DollarSign,
+  Lightbulb
 } from 'lucide-react'
 
 interface NavItem {
@@ -21,12 +23,49 @@ interface NavItem {
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { key: 'dashboard', icon: <LayoutDashboard className="h-5 w-5" />, labelKey: 'layout.sidebar.dashboard', path: '/dashboard' },
-  { key: 'leads', icon: <Users className="h-5 w-5" />, labelKey: 'layout.sidebar.leads', path: '/leads' },
-  { key: 'conversations', icon: <MessageSquare className="h-5 w-5" />, labelKey: 'layout.sidebar.conversations', path: '/workbench' },
-  { key: 'opportunities', icon: <TrendingUp className="h-5 w-5" />, labelKey: 'layout.sidebar.opportunities', path: '/opportunities' },
-  { key: 'accounts', icon: <Building2 className="h-5 w-5" />, labelKey: 'layout.sidebar.accounts', path: '/accounts' },
-  { key: 'analytics', icon: <BarChart3 className="h-5 w-5" />, labelKey: 'layout.sidebar.analytics', path: '/analytics' },
+  {
+    key: 'dashboard',
+    icon: <LayoutDashboard className="h-5 w-5" />,
+    labelKey: 'layout.sidebar.dashboard',
+    path: '/dashboard',
+  },
+  {
+    key: 'conversations',
+    icon: <MessageSquare className="h-5 w-5" />,
+    labelKey: 'layout.sidebar.conversations',
+    path: '/workbench',
+  },
+  {
+    key: 'leads',
+    icon: <Lightbulb className="h-5 w-5" />,
+    labelKey: 'layout.sidebar.leads',
+    path: '/leads',
+  },
+  {
+    key: 'opportunities',
+    icon: <DollarSign className="h-5 w-5" />,
+    labelKey: 'layout.sidebar.opportunities',
+    path: '/opportunities',
+  },
+  {
+    key: 'persons',
+    icon: <Users className="h-5 w-5" />,
+    labelKey: 'layout.sidebar.persons',
+    path: '/persons',
+  },
+
+  {
+    key: 'organizations',
+    icon: <Building2 className="h-5 w-5" />,
+    labelKey: 'layout.sidebar.organizations',
+    path: '/organizations',
+  },
+  {
+    key: 'analytics',
+    icon: <BarChart3 className="h-5 w-5" />,
+    labelKey: 'layout.sidebar.analytics',
+    path: '/analytics',
+  },
 ]
 
 export function Sidebar(): React.ReactElement {
@@ -43,13 +82,17 @@ export function Sidebar(): React.ReactElement {
         collapsed ? 'w-[68px]' : 'w-[240px]'
       }`}
     >
-      <div className={`flex items-center gap-sm border-b border-sidebar-border p-md ${collapsed ? 'justify-center' : ''}`}>
+      <div
+        className={`flex items-center gap-sm border-b border-sidebar-border p-md ${collapsed ? 'justify-center' : ''}`}
+      >
         <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground">
           <span className="text-sm font-bold">K</span>
         </div>
         {!collapsed && (
           <div className="flex flex-col overflow-hidden">
-            <span className="truncate text-[15px] font-semibold text-primary">{t('layout.appName')}</span>
+            <span className="truncate text-[15px] font-semibold text-primary">
+              {t('layout.appName')}
+            </span>
             <span className="truncate text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
               Sales Workbench
             </span>
@@ -107,11 +150,7 @@ export function Sidebar(): React.ReactElement {
           ) : (
             <PanelLeftClose className="h-5 w-5 shrink-0" />
           )}
-          {!collapsed && (
-            <span className="truncate">
-              {t('layout.sidebar.collapse')}
-            </span>
-          )}
+          {!collapsed && <span className="truncate">{t('layout.sidebar.collapse')}</span>}
         </button>
       </div>
     </aside>

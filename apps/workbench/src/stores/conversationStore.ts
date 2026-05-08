@@ -1,21 +1,40 @@
 import { create } from 'zustand'
 import type { ConversationDTO } from '@/shared/api/types'
+import { apiClient } from '@/shared/api'
+
+type ChatTypeFilter = 'all' | 'single' | 'group'
+type ActiveFilterRange = 'all' | '24h' | '3d' | '1w' | '1m'
 
 interface ConversationState {
   conversations: ConversationDTO[]
   currentConversationId: string | null
   loading: boolean
+  chatTypeFilter: ChatTypeFilter
+  activeFilterOn: boolean
+  activeFilterRange: ActiveFilterRange
+  selectedTagIds: string[]
   setConversations: (conversations: ConversationDTO[]) => void
   switchConversation: (id: string) => void
   clearUnread: (id: string) => void
   incrementUnread: (id: string) => void
   setLoading: (loading: boolean) => void
+  setChatTypeFilter: (filter: ChatTypeFilter) => void
+  setActiveFilter: (on: boolean) => void
+  setActiveFilterRange: (range: ActiveFilterRange) => void
+  setSelectedTags: (tagIds: string[]) => void
+  toggleTag: (tagId: string) => void
+  addTagToConversation: (conversationId: string, tagId: string) => Promise<void>
+  removeTagFromConversation: (conversationId: string, tagId: string) => Promise<void>
 }
 
-export const useConversationStore = create<ConversationState>((set) => ({
+export const useConversationStore = create<ConversationState>((set, get) => ({
   conversations: [],
   currentConversationId: null,
   loading: false,
+  chatTypeFilter: 'all',
+  activeFilterOn: false,
+  activeFilterRange: 'all',
+  selectedTagIds: [],
 
   setConversations: (conversations) => set({ conversations }),
 
@@ -42,4 +61,54 @@ export const useConversationStore = create<ConversationState>((set) => ({
     })),
 
   setLoading: (loading) => set({ loading }),
+
+  setChatTypeFilter: (chatTypeFilter) => set({ chatTypeFilter }),
+
+  setActiveFilter: (activeFilterOn) => {
+    if (activeFilterOn) {
+      set({ activeFilterOn, activeFilterRange: '24h', selectedTagIds: [] })
+    } else {
+      set({ activeFilterOn, activeFilterRange: 'all' })
+    }
+  },
+
+  setActiveFilterRange: (activeFilterRange) => {
+    if (activeFilterRange === 'all') {
+      set({ activeFilterRange, activeFilterOn: false })
+    } else {
+      set({ activeFilterRange, activeFilterOn: true, selectedTagIds: [] })
+    }
+  },
+
+  setSelectedTags: (selectedTagIds) => set({ selectedTagIds, activeFilterOn: false, activeFilterRange: 'all' }),
+
+  toggleTag: (tagId) => {
+    const { selectedTagIds } = get()
+    const next = selectedTagIds.includes(tagId)
+      ? selectedTagIds.filter((id) => id !== tagId)
+      : [...selectedTagIds, tagId]
+    set({ selectedTagIds: next, activeFilterOn: false, activeFilterRange: 'all' })
+  },
+
+  addTagToConversation: async (conversationId, tagId) => {
+    await apiClient.addTagToConversation(conversationId, tagId)
+    set((state) => ({
+      conversations: state.conversations.map((c) => {
+        if (c.conversationId !== conversationId) return c
+        const tags = c.tags ? [...c.tags] : []
+        if (!tags.includes(tagId)) tags.push(tagId)
+        return { ...c, tags }
+      }),
+    }))
+  },
+
+  removeTagFromConversation: async (conversationId, tagId) => {
+    await apiClient.removeTagFromConversation(conversationId, tagId)
+    set((state) => ({
+      conversations: state.conversations.map((c) => {
+        if (c.conversationId !== conversationId) return c
+        return { ...c, tags: (c.tags ?? []).filter((t) => t !== tagId) }
+      }),
+    }))
+  },
 }))

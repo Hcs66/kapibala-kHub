@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuthStore } from '@/stores/authStore'
 import { Mail, Lock, KeyRound, Shield, Share2 } from 'lucide-react'
-import type { CurrentUserDTO } from '@/shared/api/types'
+import { apiClient } from '@/shared/api'
 
 export function LoginPage(): React.ReactElement {
   const { t } = useTranslation()
@@ -19,25 +19,15 @@ export function LoginPage(): React.ReactElement {
     setError('')
     setLoading(true)
 
-    await new Promise((r) => setTimeout(r, 600))
-
-    if (username === 'sales' && password === 'sales') {
-      const mockUser: CurrentUserDTO = {
-        tenantId: 'tenant_001',
-        userId: 'user_sales_001',
-        username: 'sales',
-        displayName: '张三',
-        role: 'sales',
-        teamIds: ['team_001'],
-        capabilities: ['message.send', 'message.read'],
-      }
-      login('mock_jwt_token_sales_001', mockUser)
+    try {
+      const result = await apiClient.login({ username, password })
+      login(result.token, result.user)
       navigate('/workbench', { replace: true })
-    } else {
+    } catch (err) {
       setError(t('auth.loginError'))
+    } finally {
+      setLoading(false)
     }
-
-    setLoading(false)
   }
 
   return (
@@ -48,7 +38,7 @@ export function LoginPage(): React.ReactElement {
           'radial-gradient(ellipse 80% 60% at 20% 50%, rgba(79, 70, 229, 0.08), transparent 60%), radial-gradient(ellipse 60% 80% at 80% 20%, rgba(99, 102, 241, 0.05), transparent 50%), var(--color-background)',
       }}
     >
-      <div className="relative z-10 w-full max-w-[36rem] rounded-xl border border-border bg-surface-container-lowest/80 p-10 shadow-[0_8px_40px_rgba(0,0,0,0.06)] backdrop-blur-xl">
+      <div className="relative z-10 w-full max-w-96 rounded-xl border border-border bg-surface-container-lowest/80 p-10 shadow-[0_8px_40px_rgba(0,0,0,0.06)] backdrop-blur-xl">
         <div className="mb-6 flex flex-col items-center gap-3">
           <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-primary shadow-[0_2px_8px_rgba(79,70,229,0.3)]">
             <Share2 className="h-5 w-5 text-primary-foreground" />

@@ -4,7 +4,7 @@ export function MessageSkeleton({ count }: { count: number }): React.ReactElemen
       {Array.from({ length: count }).map((_, i) => {
         const isOutbound = i % 3 === 1
         return (
-          <div key={i} className={`flex gap-sm ${isOutbound ? 'flex-row-reverse self-end' : 'self-start'} max-w-[80%]`}>
+          <div key={i} className={`flex gap-sm ${isOutbound ? 'flex-row-reverse ml-auto' : ''} max-w-[80%]`}>
             <div className="mt-1 h-8 w-8 shrink-0 animate-pulse rounded-full bg-surface-container" />
             <div className={`flex flex-col gap-1.5 ${isOutbound ? 'items-end' : 'items-start'}`}>
               <div

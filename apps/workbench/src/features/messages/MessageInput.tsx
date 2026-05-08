@@ -75,7 +75,7 @@ export function MessageInput({ disabled, onSend, onTextChange, externalText }: M
             placeholder={disabled ? t('message.inputDisabledPlaceholder') : t('message.inputPlaceholder')}
             disabled={disabled}
             rows={1}
-            className="custom-scrollbar max-h-[100px] w-full resize-none border-none bg-transparent px-3 py-2 text-[14px] text-foreground outline-none placeholder:text-outline-variant disabled:opacity-50"
+            className="custom-scrollbar max-h-25 scrollbar-hide w-full resize-none border-none bg-transparent px-3 py-2 text-[14px] text-foreground outline-none placeholder:text-outline-variant disabled:opacity-50"
           />
         </div>
         <button
