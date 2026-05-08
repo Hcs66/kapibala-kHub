@@ -116,8 +116,10 @@ export function ConversationPage(): React.ReactElement {
             <span className="text-[16px] font-semibold text-foreground">{t('workbench.title')}</span>
           </div>
 
-          <PlatformTabs value={platformFilter} onChange={setPlatformFilter} />
-          <ChatTypeTabs value={chatTypeFilter} onChange={setChatTypeFilter} />
+          <div className="flex flex-wrap items-center gap-[6px] border-b border-surface-container-highest px-sm py-[10px]">
+            <PlatformTabs value={platformFilter} onChange={setPlatformFilter} />
+            <ChatTypeTabs value={chatTypeFilter} onChange={setChatTypeFilter} />
+          </div>
 
           <div className="relative">
             <TagFilterBar onOpenTagPopover={() => setTagPopoverOpen(true)} />

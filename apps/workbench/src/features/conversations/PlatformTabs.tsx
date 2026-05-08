@@ -17,13 +17,13 @@ export function PlatformTabs({ value, onChange }: PlatformTabsProps): React.Reac
   ]
 
   return (
-    <div className="flex items-center gap-xs border-b border-surface-container-highest px-sm py-[8px]">
+    <>
       {tabs.map((tab) => (
         <button
           key={tab.key}
           type="button"
           onClick={() => onChange(tab.key)}
-          className={`flex items-center gap-1 rounded-full px-3 py-[5px] text-[11px] font-medium transition-colors ${
+          className={`flex items-center gap-1 rounded-full px-2.5 py-[4px] text-[11px] font-medium transition-colors ${
             value === tab.key
               ? 'bg-primary text-white shadow-sm [&_svg]:text-white'
               : 'bg-surface-container-low text-on-surface-variant hover:bg-surface-container hover:text-foreground'
@@ -33,6 +33,6 @@ export function PlatformTabs({ value, onChange }: PlatformTabsProps): React.Reac
           <span>{tab.label}</span>
         </button>
       ))}
-    </div>
+    </>
   )
 }

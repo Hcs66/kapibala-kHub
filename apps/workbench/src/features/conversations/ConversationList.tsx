@@ -147,7 +147,7 @@ export function ConversationItem({ conversation, isActive, onClick }: Conversati
             : 'border border-transparent hover:bg-surface-container-low'
         }`}
       >
-        {isActive && <div className="absolute bottom-0 left-0 top-0 w-1 rounded-l-lg bg-primary" />}
+        {isActive && <div className="absolute bottom-3 left-0 top-3 w-1 bg-primary" />}
         <Avatar name={conversation.customerDisplayName} />
         <div className="min-w-0 flex-1">
           <div className="mb-[2px] flex items-start justify-between">
@@ -161,31 +161,36 @@ export function ConversationItem({ conversation, isActive, onClick }: Conversati
           <p className="truncate text-[13px] text-on-surface-variant">
             {conversation.lastMessageText}
           </p>
-          <div className="mt-xs flex items-center gap-xs">
+          <div className="mt-xs flex items-center gap-[5px]">
             <PlatformPill platform={conversation.platform} />
-            {displayTags.slice(0, 2).map((tag) => (
-              <span
-                key={tag.tagId}
-                className="inline-flex items-center gap-0.5 rounded-full px-[5px] py-[1px] text-[9px] font-medium"
-                style={{
-                  backgroundColor: `${tag.color}18`,
-                  color: tag.color,
-                }}
-              >
-                <span
-                  className="inline-block h-1.5 w-1.5 rounded-full"
-                  style={{ backgroundColor: tag.color }}
-                />
-                {tag.name}
-              </span>
-            ))}
-            {displayTags.length > 2 && (
-              <span className="text-[9px] font-medium text-on-surface-variant">
-                +{displayTags.length - 2}
-              </span>
+            {displayTags.length > 0 && (
+              <div className="flex min-w-0 items-center gap-[3px] overflow-hidden">
+                {displayTags.slice(0, 2).map((tag) => (
+                  <span
+                    key={tag.tagId}
+                    className="inline-flex shrink-0 items-center gap-[3px] rounded-full px-[6px] py-[2px] text-[9px] font-medium leading-none"
+                    style={{
+                      backgroundColor: `${tag.color}14`,
+                      color: tag.color,
+                      border: `1px solid ${tag.color}30`,
+                    }}
+                  >
+                    <span
+                      className="inline-block h-[5px] w-[5px] rounded-full"
+                      style={{ backgroundColor: tag.color }}
+                    />
+                    {tag.name}
+                  </span>
+                ))}
+                {displayTags.length > 2 && (
+                  <span className="shrink-0 rounded-full bg-surface-container px-[5px] py-[2px] text-[9px] font-medium leading-none text-on-surface-variant">
+                    +{displayTags.length - 2}
+                  </span>
+                )}
+              </div>
             )}
             {conversation.unreadCount > 0 && (
-              <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-error text-[10px] font-semibold text-on-error">
+              <span className="ml-auto flex h-[18px] min-w-[18px] shrink-0 items-center justify-center rounded-full bg-error text-[10px] font-semibold leading-none text-on-error">
                 {conversation.unreadCount > 99 ? '99+' : conversation.unreadCount}
               </span>
             )}
