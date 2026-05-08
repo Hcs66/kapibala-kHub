@@ -21,7 +21,7 @@ export const zh = {
     dataProtected: '数据已加密保护',
   },
   workbench: {
-    title: '活跃会话',
+    title: '会话',
     searchPlaceholder: '搜索会话、线索...',
     aiAnalysis: 'AI 分析',
     contactSubtitle: '联系人',
@@ -91,6 +91,15 @@ export const zh = {
     connecting: '正在连接...',
     disconnected: '连接已断开，尝试重连中...',
     reconnecting: '重连中...',
+  },
+  error: {
+    loadConversations: '加载会话列表失败',
+    loadMessages: '加载消息失败',
+    loadAccounts: '加载账号状态失败',
+    loadAnalysis: '加载分析数据失败',
+    sendMessage: '发送消息失败',
+    translateFailed: '翻译失败，请重试',
+    networkError: '网络连接异常',
   },
   layout: {
     appName: 'kHub',

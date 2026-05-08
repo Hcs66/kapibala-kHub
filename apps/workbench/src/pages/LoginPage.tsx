@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuthStore } from '@/stores/authStore'
 import { Mail, Lock, KeyRound, Shield, Share2 } from 'lucide-react'
-import type { CurrentUserDTO } from '@/shared/api/types'
+import { apiClient } from '@/shared/api'
 
 export function LoginPage(): React.ReactElement {
   const { t } = useTranslation()
@@ -19,25 +19,15 @@ export function LoginPage(): React.ReactElement {
     setError('')
     setLoading(true)
 
-    await new Promise((r) => setTimeout(r, 600))
-
-    if (username === 'sales' && password === 'sales') {
-      const mockUser: CurrentUserDTO = {
-        tenantId: 'tenant_001',
-        userId: 'user_sales_001',
-        username: 'sales',
-        displayName: '张三',
-        role: 'sales',
-        teamIds: ['team_001'],
-        capabilities: ['message.send', 'message.read'],
-      }
-      login('mock_jwt_token_sales_001', mockUser)
+    try {
+      const result = await apiClient.login({ username, password })
+      login(result.token, result.user)
       navigate('/workbench', { replace: true })
-    } else {
+    } catch (err) {
       setError(t('auth.loginError'))
+    } finally {
+      setLoading(false)
     }
-
-    setLoading(false)
   }
 
   return (

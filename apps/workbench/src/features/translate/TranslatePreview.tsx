@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Languages, Loader2 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
-import { mockClient } from '@/shared/api/mockClient'
+import { apiClient } from '@/shared/api'
 
 interface TranslatePreviewProps {
   text: string
@@ -22,7 +22,7 @@ export function TranslatePreview({ text, targetLang, onConfirmSend }: TranslateP
 
     setLoading(true)
     const timer = setTimeout(() => {
-      void mockClient
+      void apiClient
         .translatePreview({ text, sourceLang: 'zh-CN', targetLang })
         .then((result) => {
           setTranslatedText(result.translatedText)

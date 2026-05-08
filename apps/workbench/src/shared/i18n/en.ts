@@ -92,6 +92,15 @@ export const en = {
     disconnected: 'Connection lost, reconnecting...',
     reconnecting: 'Reconnecting...',
   },
+  error: {
+    loadConversations: 'Failed to load conversations',
+    loadMessages: 'Failed to load messages',
+    loadAccounts: 'Failed to load account status',
+    loadAnalysis: 'Failed to load analysis',
+    sendMessage: 'Failed to send message',
+    translateFailed: 'Translation failed, please retry',
+    networkError: 'Network connection error',
+  },
   layout: {
     appName: 'kHub',
     sidebar: {

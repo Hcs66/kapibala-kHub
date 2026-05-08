@@ -1,8 +1,8 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useCallback } from 'react'
 import { useConversationStore } from '@/stores/conversationStore'
 import { useMessageStore } from '@/stores/messageStore'
 import { createMockWs } from '@/shared/ws/mockWs'
-import type { ServerPushEvent } from '@/shared/api/types'
+import type { ServerPushEvent, AccountStatusDTO, AnalysisSummaryDTO } from '@/shared/api/types'
 import type { WsConnectionStatus } from '@/shared/ws/client'
 
 function getWsOptions(): { simulateDisconnect?: boolean; disconnectAfterMs?: number; reconnectAfterMs?: number } {
@@ -14,36 +14,75 @@ function getWsOptions(): { simulateDisconnect?: boolean; disconnectAfterMs?: num
   return {}
 }
 
-export function useWorkbenchWs(): WsConnectionStatus {
+export interface WsEventCallbacks {
+  onAccountStatusChanged?: (account: AccountStatusDTO) => void
+  onAnalysisUpdated?: (analysis: AnalysisSummaryDTO) => void
+}
+
+export function useWorkbenchWs(callbacks?: WsEventCallbacks): WsConnectionStatus {
   const currentId = useConversationStore((s) => s.currentConversationId)
   const appendMessage = useMessageStore((s) => s.appendMessage)
+  const updateMessageStatus = useMessageStore((s) => s.updateMessageStatus)
   const incrementUnread = useConversationStore((s) => s.incrementUnread)
 
   const wsRef = useRef(createMockWs(getWsOptions()))
   const [wsStatus, setWsStatus] = useState<WsConnectionStatus>('disconnected')
+  const callbacksRef = useRef(callbacks)
+  callbacksRef.current = callbacks
+
+  const currentIdRef = useRef(currentId)
+  currentIdRef.current = currentId
+
+  const handleEvent = useCallback(
+    (event: ServerPushEvent) => {
+      switch (event.type) {
+        case 'message.received': {
+          const msg = event.payload
+          if (msg.conversationId === currentIdRef.current) {
+            appendMessage(msg)
+          } else {
+            incrementUnread(msg.conversationId)
+          }
+          break
+        }
+        case 'message.sent': {
+          const sentMsg = event.payload
+          updateMessageStatus(sentMsg.messageId, 'sent')
+          break
+        }
+        case 'message.failed': {
+          const { clientMessageId } = event.payload
+          updateMessageStatus(clientMessageId, 'failed')
+          break
+        }
+        case 'account.status_changed': {
+          callbacksRef.current?.onAccountStatusChanged?.(event.payload)
+          break
+        }
+        case 'analysis.updated': {
+          callbacksRef.current?.onAnalysisUpdated?.(event.payload)
+          break
+        }
+        default:
+          break
+      }
+    },
+    [appendMessage, incrementUnread, updateMessageStatus],
+  )
 
   useEffect(() => {
     const ws = wsRef.current
     ws.connect('mock_token')
 
     const unsubStatus = ws.onStatusChange(setWsStatus)
-    const unsubEvent = ws.onEvent((event: ServerPushEvent) => {
-      if (event.type === 'message.received') {
-        const msg = event.payload
-        if (msg.conversationId === currentId) {
-          appendMessage(msg)
-        } else {
-          incrementUnread(msg.conversationId)
-        }
-      }
-    })
+    const unsubEvent = ws.onEvent(handleEvent)
 
     return () => {
       unsubStatus()
       unsubEvent()
       ws.disconnect()
     }
-  }, [currentId, appendMessage, incrementUnread])
+  }, [handleEvent])
 
   return wsStatus
 }

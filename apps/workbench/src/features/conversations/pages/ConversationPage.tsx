@@ -1,8 +1,10 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
+import { Search } from 'lucide-react'
 import { useConversationStore } from '@/stores/conversationStore'
 import { useTagStore } from '@/stores/tagStore'
 import { useMessageStore } from '@/stores/messageStore'
+import { useToastStore } from '@/stores/toastStore'
 import { ConversationList } from '@/features/conversations/ConversationList'
 import { PlatformTabs } from '@/features/conversations/PlatformTabs'
 import { ChatTypeTabs } from '@/features/conversations/ChatTypeTabs'
@@ -14,7 +16,7 @@ import { MessagePanel, MessageInput, ConversationSkeleton } from '@/features/mes
 import { AnalysisSidebar } from '@/features/analysis'
 import { AccountStatusBar } from '@/features/accounts'
 import { TranslatePreview } from '@/features/translate'
-import { mockClient } from '@/shared/api/mockClient'
+import { apiClient, mockClient } from '@/shared/api'
 import type { AnalysisSummaryDTO, AccountStatusDTO } from '@/shared/api/types'
 import type { SuggestedReply } from '@/mocks/data'
 
@@ -45,24 +47,50 @@ export function ConversationPage(): React.ReactElement {
   const setHasMore = useMessageStore((s) => s.setHasMore)
   const setMessageLoading = useMessageStore((s) => s.setLoading)
 
-  const wsStatus = useWorkbenchWs()
-  const { inputText, setInputText, handleSend, handleRetry, handleLoadMore, handleTranslateSend } = useMessageActions()
-
   const [analysis, setAnalysis] = useState<AnalysisSummaryDTO | null>(null)
   const [platformFilter, setPlatformFilter] = useState<string>('')
   const [accounts, setAccounts] = useState<AccountStatusDTO[]>([])
   const [suggestedReplies, setSuggestedReplies] = useState<SuggestedReply[]>([])
   const [tagPopoverOpen, setTagPopoverOpen] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
+
+  const handleAccountStatusChanged = useCallback((account: AccountStatusDTO) => {
+    setAccounts((prev) =>
+      prev.map((a) => (a.accountId === account.accountId ? account : a)),
+    )
+  }, [])
+
+  const handleAnalysisUpdated = useCallback((updatedAnalysis: AnalysisSummaryDTO) => {
+    setAnalysis((prev) => {
+      if (prev && prev.conversationId === updatedAnalysis.conversationId) {
+        return updatedAnalysis
+      }
+      return prev
+    })
+  }, [])
+
+  const wsStatus = useWorkbenchWs({
+    onAccountStatusChanged: handleAccountStatusChanged,
+    onAnalysisUpdated: handleAnalysisUpdated,
+  })
+  const { inputText, setInputText, handleSend, handleRetry, handleLoadMore, handleTranslateSend } = useMessageActions()
+
+  const addToast = useToastStore((s) => s.addToast)
 
   useEffect(() => {
     setConversationLoading(true)
-    void mockClient.listConversations({}).then((result) => {
+    void apiClient.listConversations({}).then((result) => {
       setConversations(result.conversations)
       setConversationLoading(false)
+    }).catch(() => {
+      setConversationLoading(false)
+      addToast(t('error.loadConversations'), 'error')
     })
-    void mockClient.listAccounts().then(setAccounts)
+    void apiClient.listAccounts().then(setAccounts).catch(() => {
+      addToast(t('error.loadAccounts'), 'error')
+    })
     void fetchTags()
-  }, [setConversations, setConversationLoading, fetchTags])
+  }, [setConversations, setConversationLoading, fetchTags, addToast, t])
 
   useEffect(() => {
     if (!currentId) {
@@ -72,14 +100,19 @@ export function ConversationPage(): React.ReactElement {
       return
     }
     setMessageLoading(true)
-    void mockClient.listMessages({ conversationId: currentId }).then((result) => {
+    void apiClient.listMessages({ conversationId: currentId }).then((result) => {
       setMessages(result.messages)
       setHasMore(result.hasMore)
       setMessageLoading(false)
+    }).catch(() => {
+      setMessageLoading(false)
+      addToast(t('error.loadMessages'), 'error')
     })
-    void mockClient.getAnalysisSummary(currentId).then(setAnalysis)
+    void apiClient.getAnalysisSummary(currentId).then(setAnalysis).catch(() => {
+      addToast(t('error.loadAnalysis'), 'error')
+    })
     setSuggestedReplies(mockClient.getSuggestedReplies(currentId))
-  }, [currentId, setMessages, setHasMore, setMessageLoading])
+  }, [currentId, setMessages, setHasMore, setMessageLoading, addToast, t])
 
   const handleSuggestedReplyClick = (text: string): void => {
     setInputText(text)
@@ -95,6 +128,10 @@ export function ConversationPage(): React.ReactElement {
     }
     if (selectedTagIds.length > 0) {
       if (!selectedTagIds.every((tagId) => c.tags?.includes(tagId))) return false
+    }
+    if (searchQuery.trim()) {
+      const q = searchQuery.trim().toLowerCase()
+      if (!c.customerDisplayName.toLowerCase().includes(q)) return false
     }
     return true
   })
@@ -114,6 +151,19 @@ export function ConversationPage(): React.ReactElement {
         <aside className="hidden w-[300px] shrink-0 flex-col overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest shadow-soft md:flex">
           <div className="flex items-center justify-between border-b border-surface-container-highest bg-surface-bright p-md">
             <span className="text-[16px] font-semibold text-foreground">{t('workbench.title')}</span>
+          </div>
+
+          <div className="px-sm pt-sm pb-[6px]">
+            <div className="relative">
+              <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder={t('workbench.searchPlaceholder')}
+                className="w-full rounded-lg border border-outline-variant bg-surface-container-low py-[7px] pl-8 pr-3 text-xs text-foreground outline-none transition-colors placeholder:text-muted-foreground/60 focus:border-primary focus:ring-1 focus:ring-primary-glow"
+              />
+            </div>
           </div>
 
           <div className="flex items-center gap-[6px] border-b border-surface-container-highest px-sm py-[10px]">

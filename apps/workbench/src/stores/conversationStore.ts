@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import type { ConversationDTO } from '@/shared/api/types'
-import { mockClient } from '@/shared/api/mockClient'
+import { apiClient } from '@/shared/api'
 
 type ChatTypeFilter = 'all' | 'single' | 'group'
 
@@ -79,7 +79,7 @@ export const useConversationStore = create<ConversationState>((set, get) => ({
   },
 
   addTagToConversation: async (conversationId, tagId) => {
-    await mockClient.addTagToConversation(conversationId, tagId)
+    await apiClient.addTagToConversation(conversationId, tagId)
     set((state) => ({
       conversations: state.conversations.map((c) => {
         if (c.conversationId !== conversationId) return c
@@ -91,7 +91,7 @@ export const useConversationStore = create<ConversationState>((set, get) => ({
   },
 
   removeTagFromConversation: async (conversationId, tagId) => {
-    await mockClient.removeTagFromConversation(conversationId, tagId)
+    await apiClient.removeTagFromConversation(conversationId, tagId)
     set((state) => ({
       conversations: state.conversations.map((c) => {
         if (c.conversationId !== conversationId) return c

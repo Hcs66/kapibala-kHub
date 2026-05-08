@@ -1,7 +1,7 @@
 import { useCallback, useState } from 'react'
 import { useConversationStore } from '@/stores/conversationStore'
 import { useMessageStore } from '@/stores/messageStore'
-import { mockClient } from '@/shared/api/mockClient'
+import { apiClient } from '@/shared/api'
 import type { MessageDTO } from '@/shared/api/types'
 
 interface UseMessageActionsResult {
@@ -48,7 +48,7 @@ export function useMessageActions(): UseMessageActionsResult {
       appendMessage(pendingMessage)
       setInputText('')
 
-      void mockClient
+      void apiClient
         .sendMessage({ conversationId: currentId, accountId: pendingMessage.accountId, text, idempotencyKey })
         .then((result) => {
           updateMessageStatus(idempotencyKey, result.status === 'sent' ? 'sent' : 'failed')
@@ -64,7 +64,7 @@ export function useMessageActions(): UseMessageActionsResult {
       updateMessageStatus(messageId, 'pending')
       const idempotencyKey = messageId
 
-      void mockClient
+      void apiClient
         .sendMessage({ conversationId: currentId, accountId: msg.accountId, text: msg.originalText, idempotencyKey })
         .then((result) => {
           updateMessageStatus(messageId, result.status === 'sent' ? 'sent' : 'failed')
@@ -77,7 +77,7 @@ export function useMessageActions(): UseMessageActionsResult {
     if (!currentId || loadingMore || !hasMore) return
     setLoadingMore(true)
     const oldestMessage = messages[0]
-    void mockClient
+    void apiClient
       .listMessages({ conversationId: currentId, beforeSeq: oldestMessage?.createdAtMs })
       .then((result) => {
         prependMessages(result.messages)

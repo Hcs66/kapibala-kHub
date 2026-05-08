@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import type { TagDTO } from '@/shared/api/types'
-import { mockClient } from '@/shared/api/mockClient'
+import { apiClient } from '@/shared/api'
 
 interface TagState {
   tags: TagDTO[]
@@ -16,18 +16,18 @@ export const useTagStore = create<TagState>((set, get) => ({
 
   fetchTags: async () => {
     set({ loading: true })
-    const tags = await mockClient.listTags()
+    const tags = await apiClient.listTags()
     set({ tags, loading: false })
   },
 
   createTag: async (name, color) => {
-    const newTag = await mockClient.createTag({ name, color })
+    const newTag = await apiClient.createTag({ name, color })
     set({ tags: [...get().tags, newTag] })
     return newTag
   },
 
   deleteTag: async (tagId) => {
-    await mockClient.deleteTag(tagId)
+    await apiClient.deleteTag(tagId)
     set({ tags: get().tags.filter((t) => t.tagId !== tagId) })
   },
 }))
