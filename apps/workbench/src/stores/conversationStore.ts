@@ -29,7 +29,7 @@ export const useConversationStore = create<ConversationState>((set, get) => ({
   currentConversationId: null,
   loading: false,
   chatTypeFilter: 'all',
-  activeFilterOn: false,
+  activeFilterOn: true,
   selectedTagIds: [],
 
   setConversations: (conversations) => set({ conversations }),
