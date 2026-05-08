@@ -13,6 +13,15 @@ import type {
   AccountStatusDTO,
   CurrentUserDTO,
   TagDTO,
+  CustomerProfileDTO,
+  IntentPredictionDTO,
+  DealSuggestionDTO,
+  ActionSuggestionDTO,
+  TimelineEventDTO,
+  PersonDTO,
+  OrganizationDTO,
+  GlobalSearchQuery,
+  GlobalSearchResult,
 } from './types'
 
 export interface WorkbenchApi {
@@ -29,6 +38,14 @@ export interface WorkbenchApi {
   deleteTag(tagId: string): Promise<void>
   addTagToConversation(conversationId: string, tagId: string): Promise<void>
   removeTagFromConversation(conversationId: string, tagId: string): Promise<void>
+  getCustomerProfile(conversationId: string): Promise<CustomerProfileDTO | null>
+  getIntentPrediction(conversationId: string): Promise<IntentPredictionDTO | null>
+  getDealSuggestion(conversationId: string): Promise<DealSuggestionDTO | null>
+  getActionSuggestions(conversationId: string): Promise<ActionSuggestionDTO | null>
+  getTimelineEvents(conversationId: string): Promise<TimelineEventDTO[]>
+  listPersons(): Promise<PersonDTO[]>
+  listOrganizations(): Promise<OrganizationDTO[]>
+  globalSearch(input: GlobalSearchQuery): Promise<GlobalSearchResult>
 }
 
 export type { WorkbenchApi as default }

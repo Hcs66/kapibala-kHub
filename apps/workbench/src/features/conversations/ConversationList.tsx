@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
-import { MessageSquare, MoreHorizontal, Tag, Check } from 'lucide-react'
-import type { ConversationDTO } from '@/shared/api/types'
+import { MessageSquare, MoreHorizontal, Tag, Check, User, Building2, Users } from 'lucide-react'
+import type { ConversationDTO, PersonDTO, OrganizationDTO } from '@/shared/api/types'
 import { useTagStore } from '@/stores/tagStore'
 import { useConversationStore } from '@/stores/conversationStore'
 
@@ -9,10 +9,27 @@ interface ConversationItemProps {
   conversation: ConversationDTO
   isActive: boolean
   onClick: () => void
+  persons: PersonDTO[]
+  organizations: OrganizationDTO[]
 }
 
-function Avatar({ name }: { name: string }): React.ReactElement {
+function Avatar({ name, chatType }: { name: string; chatType: 'single' | 'group' }): React.ReactElement {
   const initial = name.charAt(0).toUpperCase()
+  const isGroup = chatType === 'group'
+
+  if (isGroup) {
+    return (
+      <div className="relative shrink-0">
+        <div className="flex h-10 w-10 items-center justify-center rounded-[10px] bg-indigo-100 text-sm font-bold text-indigo-600 ring-1 ring-indigo-200/60">
+          <Users className="h-5 w-5" />
+        </div>
+        <div className="absolute -bottom-[2px] -right-[2px] flex h-[14px] min-w-[14px] items-center justify-center rounded-full bg-indigo-500 px-[3px] text-[8px] font-bold leading-none text-white ring-[1.5px] ring-surface-container-lowest">
+          G
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-secondary-container text-sm font-bold text-primary">
       {initial}
@@ -123,13 +140,16 @@ function ConversationTagPopover({ conversationId, conversationTags, open, onClos
   )
 }
 
-export function ConversationItem({ conversation, isActive, onClick }: ConversationItemProps): React.ReactElement {
+export function ConversationItem({ conversation, isActive, onClick, persons, organizations }: ConversationItemProps): React.ReactElement {
   const { t } = useTranslation()
   const tags = useTagStore((s) => s.tags)
   const [tagPopoverOpen, setTagPopoverOpen] = useState(false)
 
   const conversationTags = conversation.tags ?? []
   const displayTags = tags.filter((tag) => conversationTags.includes(tag.tagId))
+
+  const person = persons.find((p) => p.personId === conversation.personId)
+  const organization = organizations.find((o) => o.organizationId === conversation.organizationId)
 
   const handleMoreClick = (e: React.MouseEvent): void => {
     e.stopPropagation()
@@ -148,7 +168,7 @@ export function ConversationItem({ conversation, isActive, onClick }: Conversati
         }`}
       >
         {isActive && <div className="absolute bottom-3 left-0 top-3 w-1 bg-primary" />}
-        <Avatar name={conversation.customerDisplayName} />
+        <Avatar name={conversation.customerDisplayName} chatType={conversation.chatType} />
         <div className="min-w-0 flex-1">
           <div className="mb-[2px] flex items-start justify-between">
             <span className="truncate text-sm font-semibold text-foreground">
@@ -159,8 +179,26 @@ export function ConversationItem({ conversation, isActive, onClick }: Conversati
             </span>
           </div>
           <p className="truncate text-[13px] text-on-surface-variant">
-            {conversation.lastMessageText}
+            {conversation.chatType === 'group' && conversation.lastMessageText
+              ? `${conversation.customerDisplayName.split(' ')[0]}: ${conversation.lastMessageText}`
+              : conversation.lastMessageText}
           </p>
+          {(person || organization) && (
+            <div className="mt-[3px] flex items-center gap-[6px]">
+              {person && (
+                <span className="inline-flex items-center gap-[3px] truncate text-[10px] text-muted-foreground">
+                  <User className="h-[10px] w-[10px] shrink-0" />
+                  <span className="truncate">{person.name}</span>
+                </span>
+              )}
+              {organization && (
+                <span className="inline-flex items-center gap-[3px] truncate text-[10px] text-muted-foreground">
+                  <Building2 className="h-[10px] w-[10px] shrink-0" />
+                  <span className="truncate">{organization.name}</span>
+                </span>
+              )}
+            </div>
+          )}
           <div className="mt-xs flex items-center gap-[5px]">
             <PlatformPill platform={conversation.platform} />
             {displayTags.length > 0 && (
@@ -221,9 +259,11 @@ interface ConversationListProps {
   conversations: ConversationDTO[]
   currentId: string | null
   onSelect: (id: string) => void
+  persons: PersonDTO[]
+  organizations: OrganizationDTO[]
 }
 
-export function ConversationList({ conversations, currentId, onSelect }: ConversationListProps): React.ReactElement {
+export function ConversationList({ conversations, currentId, onSelect, persons, organizations }: ConversationListProps): React.ReactElement {
   const { t } = useTranslation()
   if (conversations.length === 0) {
     return (
@@ -242,6 +282,8 @@ export function ConversationList({ conversations, currentId, onSelect }: Convers
           conversation={c}
           isActive={c.conversationId === currentId}
           onClick={() => onSelect(c.conversationId)}
+          persons={persons}
+          organizations={organizations}
         />
       ))}
     </div>

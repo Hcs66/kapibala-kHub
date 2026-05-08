@@ -3,6 +3,7 @@ import type { ConversationDTO } from '@/shared/api/types'
 import { apiClient } from '@/shared/api'
 
 type ChatTypeFilter = 'all' | 'single' | 'group'
+type ActiveFilterRange = 'all' | '24h' | '3d' | '1w' | '1m'
 
 interface ConversationState {
   conversations: ConversationDTO[]
@@ -10,6 +11,7 @@ interface ConversationState {
   loading: boolean
   chatTypeFilter: ChatTypeFilter
   activeFilterOn: boolean
+  activeFilterRange: ActiveFilterRange
   selectedTagIds: string[]
   setConversations: (conversations: ConversationDTO[]) => void
   switchConversation: (id: string) => void
@@ -18,6 +20,7 @@ interface ConversationState {
   setLoading: (loading: boolean) => void
   setChatTypeFilter: (filter: ChatTypeFilter) => void
   setActiveFilter: (on: boolean) => void
+  setActiveFilterRange: (range: ActiveFilterRange) => void
   setSelectedTags: (tagIds: string[]) => void
   toggleTag: (tagId: string) => void
   addTagToConversation: (conversationId: string, tagId: string) => Promise<void>
@@ -29,7 +32,8 @@ export const useConversationStore = create<ConversationState>((set, get) => ({
   currentConversationId: null,
   loading: false,
   chatTypeFilter: 'all',
-  activeFilterOn: true,
+  activeFilterOn: false,
+  activeFilterRange: 'all',
   selectedTagIds: [],
 
   setConversations: (conversations) => set({ conversations }),
@@ -62,20 +66,28 @@ export const useConversationStore = create<ConversationState>((set, get) => ({
 
   setActiveFilter: (activeFilterOn) => {
     if (activeFilterOn) {
-      set({ activeFilterOn, selectedTagIds: [] })
+      set({ activeFilterOn, activeFilterRange: '24h', selectedTagIds: [] })
     } else {
-      set({ activeFilterOn })
+      set({ activeFilterOn, activeFilterRange: 'all' })
     }
   },
 
-  setSelectedTags: (selectedTagIds) => set({ selectedTagIds, activeFilterOn: false }),
+  setActiveFilterRange: (activeFilterRange) => {
+    if (activeFilterRange === 'all') {
+      set({ activeFilterRange, activeFilterOn: false })
+    } else {
+      set({ activeFilterRange, activeFilterOn: true, selectedTagIds: [] })
+    }
+  },
+
+  setSelectedTags: (selectedTagIds) => set({ selectedTagIds, activeFilterOn: false, activeFilterRange: 'all' }),
 
   toggleTag: (tagId) => {
     const { selectedTagIds } = get()
     const next = selectedTagIds.includes(tagId)
       ? selectedTagIds.filter((id) => id !== tagId)
       : [...selectedTagIds, tagId]
-    set({ selectedTagIds: next, activeFilterOn: false })
+    set({ selectedTagIds: next, activeFilterOn: false, activeFilterRange: 'all' })
   },
 
   addTagToConversation: async (conversationId, tagId) => {

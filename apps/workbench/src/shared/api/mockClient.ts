@@ -14,8 +14,17 @@ import type {
   AccountStatusDTO,
   CurrentUserDTO,
   TagDTO,
+  CustomerProfileDTO,
+  IntentPredictionDTO,
+  DealSuggestionDTO,
+  ActionSuggestionDTO,
+  TimelineEventDTO,
+  PersonDTO,
+  OrganizationDTO,
+  GlobalSearchQuery,
+  GlobalSearchResult,
 } from './types'
-import { mockConversations, mockMessages, mockAccounts, mockAccountsDisconnected, mockAnalysis, mockHistoryMessages, mockSuggestedReplies, mockTags } from '@/mocks/data'
+import { mockConversations, mockMessages, mockAccounts, mockAccountsDisconnected, mockAnalysis, mockHistoryMessages, mockSuggestedReplies, mockTags, mockCustomerProfiles, mockIntentPredictions, mockDealSuggestions, mockActionSuggestions, mockTimelineEvents, mockPersons, mockOrganizations } from '@/mocks/data'
 import type { SuggestedReply, MockScenario } from '@/mocks/data'
 
 function delay(ms: number): Promise<void> {
@@ -216,5 +225,60 @@ export const mockClient: MockClientExtended = {
     if (conv?.tags) {
       conv.tags = conv.tags.filter((t) => t !== tagId)
     }
+  },
+
+  async getCustomerProfile(conversationId: string): Promise<CustomerProfileDTO | null> {
+    await delay(250)
+    return mockCustomerProfiles[conversationId] ?? null
+  },
+
+  async getIntentPrediction(conversationId: string): Promise<IntentPredictionDTO | null> {
+    await delay(300)
+    return mockIntentPredictions[conversationId] ?? null
+  },
+
+  async getDealSuggestion(conversationId: string): Promise<DealSuggestionDTO | null> {
+    await delay(300)
+    return mockDealSuggestions[conversationId] ?? null
+  },
+
+  async getActionSuggestions(conversationId: string): Promise<ActionSuggestionDTO | null> {
+    await delay(250)
+    return mockActionSuggestions[conversationId] ?? null
+  },
+
+  async getTimelineEvents(conversationId: string): Promise<TimelineEventDTO[]> {
+    await delay(200)
+    return mockTimelineEvents[conversationId] ?? []
+  },
+
+  async listPersons(): Promise<PersonDTO[]> {
+    await delay(200)
+    return [...mockPersons]
+  },
+
+  async listOrganizations(): Promise<OrganizationDTO[]> {
+    await delay(200)
+    return [...mockOrganizations]
+  },
+
+  async globalSearch(input: GlobalSearchQuery): Promise<GlobalSearchResult> {
+    await delay(300)
+    const q = input.query.toLowerCase()
+    const limit = input.limit ?? 5
+
+    const persons = mockPersons
+      .filter((p) => p.name.toLowerCase().includes(q) || (p.email?.toLowerCase().includes(q) ?? false))
+      .slice(0, limit)
+
+    const organizations = mockOrganizations
+      .filter((o) => o.name.toLowerCase().includes(q) || (o.industry?.toLowerCase().includes(q) ?? false))
+      .slice(0, limit)
+
+    const conversations = mockConversations
+      .filter((c) => c.customerDisplayName.toLowerCase().includes(q) || c.lastMessageText.toLowerCase().includes(q))
+      .slice(0, limit)
+
+    return { persons, organizations, conversations }
   },
 }

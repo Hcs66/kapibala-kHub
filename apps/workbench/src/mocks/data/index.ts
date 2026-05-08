@@ -1,8 +1,9 @@
-import type { ConversationDTO, MessageDTO, AccountStatusDTO, AnalysisSummaryDTO, TagDTO } from '@/shared/api/types'
+import type { ConversationDTO, MessageDTO, AccountStatusDTO, AnalysisSummaryDTO, TagDTO, CustomerProfileDTO, IntentPredictionDTO, DealSuggestionDTO, ActionSuggestionDTO, TimelineEventDTO, PersonDTO, OrganizationDTO } from '@/shared/api/types'
 
 export interface SuggestedReply {
   id: string
   text: string
+  evidence?: string
 }
 
 export type MockScenario = 'normal' | 'empty' | 'error' | 'timeout'
@@ -32,9 +33,10 @@ export const mockConversations: ConversationDTO[] = [
     lastMessageAtMs: now - 2 * minute,
     unreadCount: 3,
     tags: ['tag_new_lead'],
-    stage: '需求探询',
     riskLevel: 'low',
     analysisSummary: '客户对产品价格感兴趣，处于初步了解阶段',
+    personId: 'person_001',
+    organizationId: 'org_001',
   },
   {
     conversationId: 'whatsapp::200001',
@@ -48,9 +50,10 @@ export const mockConversations: ConversationDTO[] = [
     lastMessageAtMs: now - 15 * minute,
     unreadCount: 1,
     tags: ['tag_follow_up'],
-    stage: '初次接触',
     riskLevel: 'medium',
     analysisSummary: '客户要求发送产品目录，需要及时跟进',
+    personId: 'person_002',
+    organizationId: 'org_002',
   },
   {
     conversationId: 'telegram::100002',
@@ -64,8 +67,9 @@ export const mockConversations: ConversationDTO[] = [
     lastMessageAtMs: now - 1 * hour,
     unreadCount: 0,
     tags: ['tag_vip', 'tag_high_intent'],
-    stage: '报价阶段',
     riskLevel: 'low',
+    personId: 'person_003',
+    organizationId: 'org_003',
   },
   {
     conversationId: 'whatsapp::200002',
@@ -79,9 +83,10 @@ export const mockConversations: ConversationDTO[] = [
     lastMessageAtMs: now - 2 * hour,
     unreadCount: 0,
     tags: ['tag_follow_up'],
-    stage: '报价阶段',
     riskLevel: 'high',
     analysisSummary: '客户认为价格过高，存在流失风险',
+    personId: 'person_004',
+    organizationId: 'org_004',
   },
   {
     conversationId: 'telegram::100003',
@@ -95,8 +100,9 @@ export const mockConversations: ConversationDTO[] = [
     lastMessageAtMs: now - 3 * hour,
     unreadCount: 2,
     tags: ['tag_vip'],
-    stage: '成交',
     riskLevel: 'low',
+    personId: 'person_003',
+    organizationId: 'org_003',
   },
   {
     conversationId: 'whatsapp::200003',
@@ -110,9 +116,10 @@ export const mockConversations: ConversationDTO[] = [
     lastMessageAtMs: now - 4 * hour,
     unreadCount: 0,
     tags: ['tag_wholesale', 'tag_high_intent'],
-    stage: '需求探询',
     riskLevel: 'low',
     analysisSummary: '大单潜力客户，询问批量折扣',
+    personId: 'person_005',
+    organizationId: 'org_005',
   },
   {
     conversationId: 'telegram::100004',
@@ -126,7 +133,8 @@ export const mockConversations: ConversationDTO[] = [
     lastMessageAtMs: now - 6 * hour,
     unreadCount: 0,
     tags: ['tag_new_lead'],
-    stage: '初次接触',
+    personId: 'person_001',
+    organizationId: 'org_001',
   },
   {
     conversationId: 'whatsapp::200004',
@@ -139,8 +147,9 @@ export const mockConversations: ConversationDTO[] = [
     lastMessageText: 'Do you have samples available?',
     lastMessageAtMs: now - 8 * hour,
     unreadCount: 0,
-    stage: '需求探询',
     riskLevel: 'medium',
+    personId: 'person_002',
+    organizationId: 'org_002',
   },
   {
     conversationId: 'telegram::100005',
@@ -154,8 +163,9 @@ export const mockConversations: ConversationDTO[] = [
     lastMessageAtMs: now - 12 * hour,
     unreadCount: 0,
     tags: ['tag_wholesale'],
-    stage: '需求探询',
     riskLevel: 'low',
+    personId: 'person_005',
+    organizationId: 'org_005',
   },
   {
     conversationId: 'whatsapp::200005',
@@ -168,7 +178,8 @@ export const mockConversations: ConversationDTO[] = [
     lastMessageText: 'Thanks, I will get back to you next week',
     lastMessageAtMs: now - 24 * hour,
     unreadCount: 0,
-    stage: '报价阶段',
+    personId: 'person_004',
+    organizationId: 'org_004',
   },
   {
     conversationId: 'telegram::100006',
@@ -181,8 +192,133 @@ export const mockConversations: ConversationDTO[] = [
     lastMessageText: '能不能便宜点？',
     lastMessageAtMs: now - 36 * hour,
     unreadCount: 0,
-    stage: '报价阶段',
     riskLevel: 'medium',
+    personId: 'person_003',
+    organizationId: 'org_003',
+  },
+]
+
+export const mockPersons: PersonDTO[] = [
+  {
+    personId: 'person_001',
+    name: 'Alexei Petrov',
+    phone: '+7 916 xxx-xx-42',
+    email: 'alexei@electrotech.ru',
+    language: 'ru',
+    timezone: 'Europe/Moscow',
+    location: 'Moscow, Russia',
+    source: 'Telegram',
+    organizationId: 'org_001',
+    conversationCount: 2,
+    lastActiveAtMs: now - 2 * minute,
+  },
+  {
+    personId: 'person_002',
+    name: 'James Wilson',
+    phone: '+1 415 xxx-xx-88',
+    email: 'james@wilsontrading.com',
+    language: 'en',
+    timezone: 'America/New_York',
+    location: 'New York, USA',
+    source: 'WhatsApp',
+    organizationId: 'org_002',
+    conversationCount: 2,
+    lastActiveAtMs: now - 15 * minute,
+  },
+  {
+    personId: 'person_003',
+    name: 'Dmitry Volkov',
+    phone: '+7 903 xxx-xx-15',
+    email: 'dmitry@volkov-import.ru',
+    language: 'ru',
+    timezone: 'Europe/Moscow',
+    location: 'Saint Petersburg, Russia',
+    source: 'Telegram',
+    organizationId: 'org_003',
+    conversationCount: 3,
+    lastActiveAtMs: now - 1 * hour,
+  },
+  {
+    personId: 'person_004',
+    name: 'Sarah Chen',
+    phone: '+65 9xxx-xx-34',
+    email: 'sarah@apacparts.sg',
+    language: 'en',
+    timezone: 'Asia/Singapore',
+    location: 'Singapore',
+    source: 'WhatsApp',
+    organizationId: 'org_004',
+    conversationCount: 2,
+    lastActiveAtMs: now - 2 * hour,
+  },
+  {
+    personId: 'person_005',
+    name: 'Ahmed Al-Rashid',
+    phone: '+971 50 xxx-xx-67',
+    email: 'ahmed@gulfwholesale.ae',
+    language: 'en',
+    timezone: 'Asia/Dubai',
+    location: 'Dubai, UAE',
+    source: 'WhatsApp',
+    organizationId: 'org_005',
+    conversationCount: 2,
+    lastActiveAtMs: now - 4 * hour,
+  },
+]
+
+export const mockOrganizations: OrganizationDTO[] = [
+  {
+    organizationId: 'org_001',
+    name: 'ООО ЭлектроТех',
+    industry: '电子元器件',
+    size: '50-200',
+    website: 'electrotech.ru',
+    country: 'Russia',
+    annualRevenue: '$2M-5M',
+    personCount: 1,
+    conversationCount: 2,
+  },
+  {
+    organizationId: 'org_002',
+    name: 'Wilson Trading Co.',
+    industry: '贸易',
+    size: '10-50',
+    country: 'USA',
+    personCount: 1,
+    conversationCount: 2,
+  },
+  {
+    organizationId: 'org_003',
+    name: 'Volkov Import LLC',
+    industry: '进出口贸易',
+    size: '200-500',
+    website: 'volkov-import.ru',
+    country: 'Russia',
+    annualRevenue: '$10M-20M',
+    personCount: 1,
+    conversationCount: 3,
+  },
+  {
+    organizationId: 'org_004',
+    name: 'APAC Parts Pte Ltd',
+    industry: '电子零部件分销',
+    size: '50-200',
+    website: 'apacparts.sg',
+    country: 'Singapore',
+    annualRevenue: '$5M-10M',
+    personCount: 1,
+    conversationCount: 2,
+  },
+  {
+    organizationId: 'org_005',
+    name: 'Gulf Wholesale FZE',
+    industry: '批发贸易',
+    size: '200-500',
+    website: 'gulfwholesale.ae',
+    country: 'UAE',
+    annualRevenue: '$20M-50M',
+    personCount: 1,
+    conversationCount: 2,
   },
 ]
 
@@ -749,7 +885,6 @@ export const mockAnalysis: Record<string, AnalysisSummaryDTO> = {
   'telegram::100001': {
     conversationId: 'telegram::100001',
     summary: '客户是俄罗斯电子元器件采购商，对电阻和电容有明确需求，关注起订量和运费。',
-    stage: '需求探询',
     trust: '中等',
     concern: '价格敏感，关注物流成本',
     nextAction: '提供产品报价单和运费方案',
@@ -762,7 +897,6 @@ export const mockAnalysis: Record<string, AnalysisSummaryDTO> = {
   'whatsapp::200001': {
     conversationId: 'whatsapp::200001',
     summary: '客户通过网络找到公司，处于初步了解阶段，要求发送产品目录。',
-    stage: '初次接触',
     trust: '待建立',
     concern: '尚未明确具体需求',
     nextAction: '发送产品目录并询问具体需求',
@@ -774,7 +908,6 @@ export const mockAnalysis: Record<string, AnalysisSummaryDTO> = {
   'telegram::100002': {
     conversationId: 'telegram::100002',
     summary: 'VIP客户，已收到报价并认为价格可接受，但需要与合伙人商量。询问长期合作折扣政策，显示出合作意向。',
-    stage: '报价阶段',
     trust: '较高',
     concern: '需要内部决策流程，关注长期合作优惠',
     nextAction: '保持跟进，等待客户决策反馈',
@@ -787,7 +920,6 @@ export const mockAnalysis: Record<string, AnalysisSummaryDTO> = {
   'whatsapp::200002': {
     conversationId: 'whatsapp::200002',
     summary: '客户认为报价过高，要求至少降低20%。价格敏感度高，存在流失风险。',
-    stage: '报价阶段',
     trust: '中等',
     concern: '价格差距较大，客户预算有限',
     nextAction: '与经理协商价格调整空间，尽快回复客户',
@@ -800,7 +932,6 @@ export const mockAnalysis: Record<string, AnalysisSummaryDTO> = {
   'telegram::100003': {
     conversationId: 'telegram::100003',
     summary: '客户已完成付款，处于成交后服务阶段。关注发货时间和物流追踪信息。',
-    stage: '成交',
     trust: '高',
     concern: '关注物流进度和交付时效',
     nextAction: '按时发货并及时提供物流单号',
@@ -813,7 +944,6 @@ export const mockAnalysis: Record<string, AnalysisSummaryDTO> = {
   'whatsapp::200003': {
     conversationId: 'whatsapp::200003',
     summary: '批发大客户，需求500件，对15%折扣和免费海运表示满意，要求正式报价单。',
-    stage: '需求探询',
     trust: '较高',
     concern: '需要正式文件推进采购流程',
     nextAction: '发送正式报价单，推进订单签署',
@@ -827,34 +957,301 @@ export const mockAnalysis: Record<string, AnalysisSummaryDTO> = {
 
 export const mockSuggestedReplies: Record<string, SuggestedReply[]> = {
   'telegram::100001': [
-    { id: 'sr_001', text: '我们的最小起订量是100件，运费根据重量计算，大约$15/kg到俄罗斯。' },
-    { id: 'sr_002', text: '我可以为您准备一份详细的报价单，包含电阻和电容的价格及运费方案。' },
-    { id: 'sr_003', text: '请问您需要哪些具体型号？我可以查询库存和价格。' },
+    { id: 'sr_001', text: '我们的最小起订量是100件，运费根据重量计算，大约$15/kg到俄罗斯。', evidence: '客户问"你们的最小起订量是多少？"和"运费到俄罗斯多少钱？"' },
+    { id: 'sr_002', text: '我可以为您准备一份详细的报价单，包含电阻和电容的价格及运费方案。', evidence: '客户明确需要电子元器件（电阻和电容），且关注价格和运费' },
+    { id: 'sr_003', text: '请问您需要哪些具体型号？我可以查询库存和价格。', evidence: '客户提到需要电阻和电容，但未指定具体型号规格' },
   ],
   'whatsapp::200001': [
-    { id: 'sr_101', text: 'Sure! I will send you our latest product catalog right away.' },
-    { id: 'sr_102', text: 'Here is our catalog link. Could you tell me which category interests you most?' },
-    { id: 'sr_103', text: 'I have attached the catalog. Let me know if you need samples.' },
+    { id: 'sr_101', text: 'Sure! I will send you our latest product catalog right away.', evidence: 'Customer asked "Can you send me the catalog?"' },
+    { id: 'sr_102', text: 'Here is our catalog link. Could you tell me which category interests you most?', evidence: 'Customer requested catalog but hasn\'t specified product category' },
+    { id: 'sr_103', text: 'I have attached the catalog. Let me know if you need samples.', evidence: 'Customer sent a product image showing the type they are looking for' },
   ],
   'telegram::100002': [
-    { id: 'sr_201', text: '感谢您的考虑！如果您和合伙人有任何疑问，我随时为您解答。' },
-    { id: 'sr_202', text: '我们非常重视长期合作，除了折扣，还可以提供账期支持。' },
-    { id: 'sr_203', text: '请问您预计什么时候能给我答复？我可以为您预留库存。' },
+    { id: 'sr_201', text: '感谢您的考虑！如果您和合伙人有任何疑问，我随时为您解答。', evidence: '客户说"我需要和合伙人商量一下"' },
+    { id: 'sr_202', text: '我们非常重视长期合作，除了折扣，还可以提供账期支持。', evidence: '客户询问"你能为老客户提供折扣吗？"，表明关注长期合作优惠' },
+    { id: 'sr_203', text: '请问您预计什么时候能给我答复？我可以为您预留库存。', evidence: '客户说"好的，我考虑一下再回复你"，需要跟进时间节点' },
   ],
   'whatsapp::200002': [
-    { id: 'sr_301', text: 'I understand your budget concern. Let me check with my manager for the best price we can offer.' },
-    { id: 'sr_302', text: 'We can offer 10% discount if you increase the order quantity. Would that work for you?' },
-    { id: 'sr_303', text: 'May I know your target price? I will do my best to meet your expectations.' },
+    { id: 'sr_301', text: 'I understand your budget concern. Let me check with my manager for the best price we can offer.', evidence: 'Customer said "The price is too high for us" and "We are looking for at least 20% lower"' },
+    { id: 'sr_302', text: 'We can offer 10% discount if you increase the order quantity. Would that work for you?', evidence: 'Customer wants 20% lower price; offering volume discount as compromise' },
+    { id: 'sr_303', text: 'May I know your target price? I will do my best to meet your expectations.', evidence: 'Customer expressed price is too high but exact target unclear beyond "at least 20% lower"' },
   ],
   'telegram::100003': [
-    { id: 'sr_401', text: '货物将在周一发出，我会第一时间发送物流单号和预计到达时间。' },
-    { id: 'sr_402', text: '感谢您的信任！我们会确保货物安全快速送达。' },
-    { id: 'sr_403', text: '发货后您可以随时联系我查询物流进度。' },
+    { id: 'sr_401', text: '货物将在周一发出，我会第一时间发送物流单号和预计到达时间。', evidence: '客户问"物流单号是多少？"和"什么时候发货？"' },
+    { id: 'sr_402', text: '感谢您的信任！我们会确保货物安全快速送达。', evidence: '客户已完成付款，处于等待发货阶段' },
+    { id: 'sr_403', text: '发货后您可以随时联系我查询物流进度。', evidence: '客户多次询问物流相关问题，关注交付时效' },
   ],
   'whatsapp::200003': [
-    { id: 'sr_501', text: 'I will prepare a formal quotation with all details and send it to you within 2 hours.' },
-    { id: 'sr_502', text: 'Great! The quotation will include product specs, pricing, shipping terms, and payment methods.' },
-    { id: 'sr_503', text: 'Once you confirm the quotation, we can proceed with the contract and arrange production.' },
+    { id: 'sr_501', text: 'I will prepare a formal quotation with all details and send it to you within 2 hours.', evidence: 'Customer asked "Can you send me a formal quotation?"' },
+    { id: 'sr_502', text: 'Great! The quotation will include product specs, pricing, shipping terms, and payment methods.', evidence: 'Customer needs formal document to proceed with procurement process' },
+    { id: 'sr_503', text: 'Once you confirm the quotation, we can proceed with the contract and arrange production.', evidence: 'Customer satisfied with 15% discount and free shipping; ready for next step' },
+  ],
+}
+
+export const mockCustomerProfiles: Record<string, CustomerProfileDTO> = {
+  'telegram::100001': {
+    conversationId: 'telegram::100001',
+    person: {
+      name: 'Alexei Petrov',
+      phone: '+7 916 xxx-xx-42',
+      email: 'alexei@electrotech.ru',
+      language: 'ru',
+      timezone: 'Europe/Moscow',
+      location: 'Moscow, Russia',
+      source: 'Telegram',
+      firstContactAtMs: now - 7 * 24 * hour,
+    },
+    company: {
+      name: 'ООО ЭлектроТех',
+      industry: '电子元器件',
+      size: '50-200',
+      website: 'electrotech.ru',
+      country: 'Russia',
+      annualRevenue: '$2M-5M',
+    },
+    tags: ['tag_new_lead'],
+  },
+  'whatsapp::200001': {
+    conversationId: 'whatsapp::200001',
+    person: {
+      name: 'James Wilson',
+      phone: '+1 415 xxx-xx-88',
+      email: 'james@wilsontrading.com',
+      language: 'en',
+      timezone: 'America/New_York',
+      location: 'New York, USA',
+      source: 'WhatsApp',
+      firstContactAtMs: now - 3 * 24 * hour,
+    },
+    company: {
+      name: 'Wilson Trading Co.',
+      industry: '贸易',
+      size: '10-50',
+      country: 'USA',
+    },
+    tags: ['tag_follow_up'],
+  },
+  'telegram::100002': {
+    conversationId: 'telegram::100002',
+    person: {
+      name: 'Dmitry Volkov',
+      phone: '+7 903 xxx-xx-15',
+      email: 'dmitry@volkov-import.ru',
+      language: 'ru',
+      timezone: 'Europe/Moscow',
+      location: 'Saint Petersburg, Russia',
+      source: 'Telegram',
+      firstContactAtMs: now - 60 * 24 * hour,
+    },
+    company: {
+      name: 'Volkov Import LLC',
+      industry: '进出口贸易',
+      size: '200-500',
+      website: 'volkov-import.ru',
+      country: 'Russia',
+      annualRevenue: '$10M-20M',
+    },
+    tags: ['tag_vip', 'tag_high_intent'],
+  },
+  'whatsapp::200002': {
+    conversationId: 'whatsapp::200002',
+    person: {
+      name: 'Sarah Chen',
+      phone: '+65 9xxx-xx-34',
+      email: 'sarah@apacparts.sg',
+      language: 'en',
+      timezone: 'Asia/Singapore',
+      location: 'Singapore',
+      source: 'WhatsApp',
+      firstContactAtMs: now - 14 * 24 * hour,
+    },
+    company: {
+      name: 'APAC Parts Pte Ltd',
+      industry: '电子零部件分销',
+      size: '50-200',
+      website: 'apacparts.sg',
+      country: 'Singapore',
+      annualRevenue: '$5M-10M',
+    },
+    tags: ['tag_follow_up'],
+  },
+  'whatsapp::200003': {
+    conversationId: 'whatsapp::200003',
+    person: {
+      name: 'Ahmed Al-Rashid',
+      phone: '+971 50 xxx-xx-67',
+      email: 'ahmed@gulfwholesale.ae',
+      language: 'en',
+      timezone: 'Asia/Dubai',
+      location: 'Dubai, UAE',
+      source: 'WhatsApp',
+      firstContactAtMs: now - 30 * 24 * hour,
+    },
+    company: {
+      name: 'Gulf Wholesale FZE',
+      industry: '批发贸易',
+      size: '200-500',
+      website: 'gulfwholesale.ae',
+      country: 'UAE',
+      annualRevenue: '$20M-50M',
+    },
+    tags: ['tag_wholesale', 'tag_high_intent'],
+  },
+}
+
+export const mockIntentPredictions: Record<string, IntentPredictionDTO> = {
+  'telegram::100001': {
+    conversationId: 'telegram::100001',
+    intent: '询价采购',
+    confidence: 0.82,
+    reasoning: '客户明确询问产品价格、起订量和运费，表明有采购意向。结合其公司背景（电子元器件行业），判断为B2B采购询价。',
+    relatedLeadIds: ['lead_001'],
+    updatedAtMs: now - 1 * minute,
+  },
+  'whatsapp::200001': {
+    conversationId: 'whatsapp::200001',
+    intent: '信息收集',
+    confidence: 0.65,
+    reasoning: '客户要求发送产品目录，尚未表达具体采购需求，处于信息收集阶段。',
+    updatedAtMs: now - 10 * minute,
+  },
+  'telegram::100002': {
+    conversationId: 'telegram::100002',
+    intent: '复购决策',
+    confidence: 0.88,
+    reasoning: '老客户已收到报价并认为价格可接受，正在内部决策。询问长期合作折扣表明复购意向强烈。',
+    relatedLeadIds: ['lead_003'],
+    relatedOpportunityIds: ['opp_002'],
+    updatedAtMs: now - 1 * hour,
+  },
+  'whatsapp::200002': {
+    conversationId: 'whatsapp::200002',
+    intent: '价格谈判',
+    confidence: 0.91,
+    reasoning: '客户明确表示价格过高并提出降价20%的要求，处于价格博弈阶段。存在流失风险。',
+    relatedOpportunityIds: ['opp_003'],
+    updatedAtMs: now - 2 * hour,
+  },
+  'whatsapp::200003': {
+    conversationId: 'whatsapp::200003',
+    intent: '大单采购',
+    confidence: 0.93,
+    reasoning: '客户明确需求500件，对折扣和运费方案满意，要求正式报价单。采购流程即将进入签约阶段。',
+    relatedLeadIds: ['lead_005'],
+    relatedOpportunityIds: ['opp_005'],
+    updatedAtMs: now - 4 * hour,
+  },
+}
+
+export const mockDealSuggestions: Record<string, DealSuggestionDTO> = {
+  'telegram::100001': {
+    conversationId: 'telegram::100001',
+    predictedRange: { min: 3000, max: 8000, currency: 'USD' },
+    suggestedProducts: [
+      { productName: '贴片电阻 0805 系列', suggestedPrice: 0.005, currency: 'USD', reason: '客户明确需要电阻，0805为最常用规格' },
+      { productName: '铝电解电容 100μF', suggestedPrice: 0.12, currency: 'USD', reason: '客户提及电容需求，铝电解为通用型号' },
+    ],
+    reasoning: '基于客户公司规模（50-200人）和行业（电子元器件），预计首单金额在$3K-$8K区间。',
+    updatedAtMs: now - 1 * minute,
+  },
+  'telegram::100002': {
+    conversationId: 'telegram::100002',
+    predictedRange: { min: 15000, max: 30000, currency: 'USD' },
+    suggestedProducts: [
+      { productName: '上次采购同款（批次补货）', suggestedPrice: 0.045, currency: 'USD', reason: 'VIP客户复购，建议维持上次价格并给予5%折扣' },
+    ],
+    reasoning: 'VIP老客户复购，历史订单均值$20K。考虑长期合作折扣后预计$15K-$30K。',
+    updatedAtMs: now - 1 * hour,
+  },
+  'whatsapp::200002': {
+    conversationId: 'whatsapp::200002',
+    predictedRange: { min: 5000, max: 12000, currency: 'USD' },
+    suggestedProducts: [
+      { productName: '客户询价产品（200件）', suggestedPrice: 35, currency: 'USD', reason: '客户要求降价20%，建议降10%+增加附加服务' },
+    ],
+    reasoning: '客户预算有限但有明确需求。建议适度让价（10-12%）配合增值服务促成交易。',
+    updatedAtMs: now - 2 * hour,
+  },
+  'whatsapp::200003': {
+    conversationId: 'whatsapp::200003',
+    predictedRange: { min: 25000, max: 40000, currency: 'USD' },
+    suggestedProducts: [
+      { productName: '批发产品（500件）', suggestedPrice: 55, currency: 'USD', reason: '500件15%折扣后单价，含免费海运' },
+      { productName: '配件包（推荐追加）', suggestedPrice: 8, currency: 'USD', reason: '批发客户常追加配件，提升客单价' },
+    ],
+    reasoning: '大单客户，500件×$55=$27.5K基础订单。推荐追加配件包可提升至$31.5K+。',
+    updatedAtMs: now - 4 * hour,
+  },
+}
+
+export const mockActionSuggestions: Record<string, ActionSuggestionDTO> = {
+  'telegram::100001': {
+    conversationId: 'telegram::100001',
+    actions: [
+      { actionId: 'act_001', type: 'quote', label: '发送报价单', description: '为客户准备电阻和电容的详细报价单，包含运费方案', priority: 'high', reasoning: '客户已明确询问价格和运费，应尽快提供报价' },
+      { actionId: 'act_002', type: 'convert_lead', label: '转化为线索', description: '将该客户录入线索管理，标记为"电子元器件-俄罗斯"', priority: 'medium', reasoning: '客户有明确采购意向，应纳入销售漏斗管理' },
+    ],
+    updatedAtMs: now - 1 * minute,
+  },
+  'whatsapp::200001': {
+    conversationId: 'whatsapp::200001',
+    actions: [
+      { actionId: 'act_101', type: 'send_catalog', label: '发送产品目录', description: '发送最新产品目录PDF并询问具体需求', priority: 'high', reasoning: '客户明确要求产品目录，应立即响应' },
+      { actionId: 'act_102', type: 'follow_up', label: '24h后跟进', description: '发送目录后24小时内跟进，询问是否有感兴趣的产品', priority: 'medium', reasoning: '初次接触客户需要主动跟进建立关系' },
+    ],
+    updatedAtMs: now - 10 * minute,
+  },
+  'telegram::100002': {
+    conversationId: 'telegram::100002',
+    actions: [
+      { actionId: 'act_201', type: 'follow_up', label: '3天后跟进', description: '等待客户与合伙人商量后，主动跟进决策结果', priority: 'medium', reasoning: '客户需要内部决策时间，过早跟进可能造成压力' },
+      { actionId: 'act_202', type: 'convert_opportunity', label: '转化为商机', description: '将该复购需求录入商机管理，预计金额$20K', priority: 'high', reasoning: 'VIP客户复购意向明确，应进入商机跟踪' },
+    ],
+    updatedAtMs: now - 1 * hour,
+  },
+  'whatsapp::200002': {
+    conversationId: 'whatsapp::200002',
+    actions: [
+      { actionId: 'act_301', type: 'quote', label: '提供调整报价', description: '与经理协商后提供10%折扣的新报价方案', priority: 'high', reasoning: '客户等待回复，需尽快给出调整方案避免流失' },
+      { actionId: 'act_302', type: 'other', label: '提供增值方案', description: '在价格让步有限时，提供免费样品/延长账期等增值服务', priority: 'medium', reasoning: '价格差距较大时，增值服务可弥补价格差异' },
+    ],
+    updatedAtMs: now - 2 * hour,
+  },
+  'whatsapp::200003': {
+    conversationId: 'whatsapp::200003',
+    actions: [
+      { actionId: 'act_501', type: 'quote', label: '发送正式报价单', description: '准备包含产品规格、价格、运输条款和付款方式的正式报价单', priority: 'high', reasoning: '客户已明确要求正式报价单，是推进签约的关键步骤' },
+      { actionId: 'act_502', type: 'convert_opportunity', label: '创建商机', description: '创建$27.5K商机，标记为"批发-迪拜-500件"', priority: 'high', reasoning: '大单客户意向明确，需进入商机管理确保跟进' },
+      { actionId: 'act_503', type: 'transfer', label: '通知仓储备货', description: '通知仓储部门预留500件库存，确保交期', priority: 'medium', reasoning: '大单需提前协调库存，避免签约后无法按时交付' },
+    ],
+    updatedAtMs: now - 4 * hour,
+  },
+}
+
+export const mockTimelineEvents: Record<string, TimelineEventDTO[]> = {
+  'telegram::100001': [
+    { eventId: 'evt_001', conversationId: 'telegram::100001', type: 'conversation', title: '首次对话', description: '客户通过Telegram发起咨询', status: '进行中', createdAtMs: now - 7 * 24 * hour },
+    { eventId: 'evt_002', conversationId: 'telegram::100001', type: 'lead', title: '线索创建', description: '电子元器件采购需求', status: '新线索', createdAtMs: now - 5 * 24 * hour, relatedId: 'lead_001' },
+  ],
+  'whatsapp::200001': [
+    { eventId: 'evt_101', conversationId: 'whatsapp::200001', type: 'conversation', title: '首次对话', description: '客户通过WhatsApp发起咨询', status: '进行中', createdAtMs: now - 3 * 24 * hour },
+  ],
+  'telegram::100002': [
+    { eventId: 'evt_201', conversationId: 'telegram::100002', type: 'conversation', title: '首次对话', description: 'VIP老客户复购咨询', status: '进行中', createdAtMs: now - 60 * 24 * hour },
+    { eventId: 'evt_202', conversationId: 'telegram::100002', type: 'lead', title: '线索-批量采购', description: '电子元器件批量采购需求', status: '已转化', createdAtMs: now - 45 * 24 * hour, relatedId: 'lead_003' },
+    { eventId: 'evt_203', conversationId: 'telegram::100002', type: 'opportunity', title: '商机-复购订单', description: '预计金额$20K', status: '报价中', amount: 20000, currency: 'USD', createdAtMs: now - 30 * 24 * hour, relatedId: 'opp_002' },
+    { eventId: 'evt_204', conversationId: 'telegram::100002', type: 'opportunity', title: '历史商机-首单', description: '首次合作订单$12K', status: '已成交', amount: 12000, currency: 'USD', createdAtMs: now - 90 * 24 * hour, relatedId: 'opp_001' },
+  ],
+  'whatsapp::200002': [
+    { eventId: 'evt_301', conversationId: 'whatsapp::200002', type: 'conversation', title: '首次对话', description: '客户咨询产品', status: '进行中', createdAtMs: now - 14 * 24 * hour },
+    { eventId: 'evt_302', conversationId: 'whatsapp::200002', type: 'lead', title: '线索-200件采购', description: '200件产品采购需求', status: '跟进中', createdAtMs: now - 10 * 24 * hour, relatedId: 'lead_004' },
+    { eventId: 'evt_303', conversationId: 'whatsapp::200002', type: 'opportunity', title: '商机-200件订单', description: '预计金额$7K，价格谈判中', status: '谈判中', amount: 7000, currency: 'USD', createdAtMs: now - 5 * 24 * hour, relatedId: 'opp_003' },
+  ],
+  'whatsapp::200003': [
+    { eventId: 'evt_501', conversationId: 'whatsapp::200003', type: 'conversation', title: '首次对话', description: '迪拜批发商咨询', status: '进行中', createdAtMs: now - 30 * 24 * hour },
+    { eventId: 'evt_502', conversationId: 'whatsapp::200003', type: 'lead', title: '线索-批发询价', description: '批发采购500件', status: '已转化', createdAtMs: now - 20 * 24 * hour, relatedId: 'lead_005' },
+    { eventId: 'evt_503', conversationId: 'whatsapp::200003', type: 'opportunity', title: '商机-500件批发', description: '预计金额$27.5K', status: '报价中', amount: 27500, currency: 'USD', createdAtMs: now - 10 * 24 * hour, relatedId: 'opp_005' },
+    { eventId: 'evt_504', conversationId: 'whatsapp::200003', type: 'opportunity', title: '历史商机-样品单', description: '样品订单$500', status: '已成交', amount: 500, currency: 'USD', createdAtMs: now - 60 * 24 * hour, relatedId: 'opp_004' },
   ],
 }
 

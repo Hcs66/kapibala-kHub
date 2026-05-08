@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Search, WifiOff } from 'lucide-react'
+import { Search, WifiOff, X } from 'lucide-react'
 import { useConversationStore } from '@/stores/conversationStore'
 import { useTagStore } from '@/stores/tagStore'
 import { useMessageStore } from '@/stores/messageStore'
@@ -9,9 +9,7 @@ import { useAccountStore } from '@/stores/accountStore'
 import { useAnalysisStore } from '@/stores/analysisStore'
 import { ConversationList } from '@/features/conversations/ConversationList'
 import { PlatformTabs } from '@/features/conversations/PlatformTabs'
-import { ChatTypeTabs } from '@/features/conversations/ChatTypeTabs'
-import { TagFilterBar } from '@/features/conversations/TagFilterBar'
-import { TagPopover } from '@/features/conversations/TagPopover'
+import { FilterPopover, FilterTrigger } from '@/features/conversations/FilterPopover'
 import { useWorkbenchWs } from '@/features/conversations/hooks/useWorkbenchWs'
 import { useMessageActions } from '@/features/conversations/hooks/useMessageActions'
 import { MessagePanel, MessageInput, ConversationSkeleton } from '@/features/messages'
@@ -20,8 +18,24 @@ import { AccountStatusBar } from '@/features/accounts'
 import { TranslatePreview } from '@/features/translate'
 import { apiClient, mockClient } from '@/shared/api'
 import type { SuggestedReply } from '@/mocks/data'
+import type {
+  CustomerProfileDTO,
+  IntentPredictionDTO,
+  DealSuggestionDTO,
+  ActionSuggestionDTO,
+  TimelineEventDTO,
+  PersonDTO,
+  OrganizationDTO,
+} from '@/shared/api/types'
 
 const ACTIVE_THRESHOLD_MS = 24 * 60 * 60 * 1000
+
+const RANGE_TO_MS: Record<string, number> = {
+  '24h': 24 * 60 * 60 * 1000,
+  '3d': 3 * 24 * 60 * 60 * 1000,
+  '1w': 7 * 24 * 60 * 60 * 1000,
+  '1m': 30 * 24 * 60 * 60 * 1000,
+}
 
 export function ConversationPage(): React.ReactElement {
   const { t } = useTranslation()
@@ -31,9 +45,8 @@ export function ConversationPage(): React.ReactElement {
   const setConversations = useConversationStore((s) => s.setConversations)
   const switchConversation = useConversationStore((s) => s.switchConversation)
   const setConversationLoading = useConversationStore((s) => s.setLoading)
-  const chatTypeFilter = useConversationStore((s) => s.chatTypeFilter)
-  const setChatTypeFilter = useConversationStore((s) => s.setChatTypeFilter)
   const activeFilterOn = useConversationStore((s) => s.activeFilterOn)
+  const activeFilterRange = useConversationStore((s) => s.activeFilterRange)
   const selectedTagIds = useConversationStore((s) => s.selectedTagIds)
 
   const fetchTags = useTagStore((s) => s.fetchTags)
@@ -59,10 +72,18 @@ export function ConversationPage(): React.ReactElement {
 
   const [platformFilter, setPlatformFilter] = useState<string>('')
   const [suggestedReplies, setSuggestedReplies] = useState<SuggestedReply[]>([])
-  const [tagPopoverOpen, setTagPopoverOpen] = useState(false)
+  const [filterPopoverOpen, setFilterPopoverOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [isOffline, setIsOffline] = useState(!navigator.onLine)
-
+  const [customerProfile, setCustomerProfile] = useState<CustomerProfileDTO | null>(null)
+  const [intentPrediction, setIntentPrediction] = useState<IntentPredictionDTO | null>(null)
+  const [dealSuggestion, setDealSuggestion] = useState<DealSuggestionDTO | null>(null)
+  const [actionSuggestions, setActionSuggestions] = useState<ActionSuggestionDTO | null>(null)
+  const [timelineEvents, setTimelineEvents] = useState<TimelineEventDTO[]>([])
+  const [persons, setPersons] = useState<PersonDTO[]>([])
+  const [organizations, setOrganizations] = useState<OrganizationDTO[]>([])
+  const [personFilter, setPersonFilter] = useState<string>('')
+  const [orgFilter, setOrgFilter] = useState<string>('')
   useEffect(() => {
     const handleOnline = (): void => setIsOffline(false)
     const handleOffline = (): void => setIsOffline(true)
@@ -82,23 +103,29 @@ export function ConversationPage(): React.ReactElement {
     onAccountStatusChanged: handleAccountStatusChanged,
     onAnalysisUpdated: handleAnalysisUpdated,
   })
-  const { inputText, setInputText, handleSend, handleRetry, handleLoadMore, handleTranslateSend } = useMessageActions()
+  const { inputText, setInputText, handleSend, handleRetry, handleLoadMore, handleTranslateSend } =
+    useMessageActions()
 
   const addToast = useToastStore((s) => s.addToast)
 
   useEffect(() => {
     setConversationLoading(true)
-    void apiClient.listConversations({}).then((result) => {
-      setConversations(result.conversations)
-      setConversationLoading(false)
-    }).catch(() => {
-      setConversationLoading(false)
-      addToast(t('error.loadConversations'), 'error')
-    })
+    void apiClient
+      .listConversations({})
+      .then((result) => {
+        setConversations(result.conversations)
+        setConversationLoading(false)
+      })
+      .catch(() => {
+        setConversationLoading(false)
+        addToast(t('error.loadConversations'), 'error')
+      })
     void fetchAccounts().catch(() => {
       addToast(t('error.loadAccounts'), 'error')
     })
     void fetchTags()
+    void apiClient.listPersons().then(setPersons)
+    void apiClient.listOrganizations().then(setOrganizations)
   }, [setConversations, setConversationLoading, fetchTags, fetchAccounts, addToast, t])
 
   useEffect(() => {
@@ -106,44 +133,87 @@ export function ConversationPage(): React.ReactElement {
       setMessages([])
       clearAnalysis()
       setSuggestedReplies([])
+      setCustomerProfile(null)
+      setIntentPrediction(null)
+      setDealSuggestion(null)
+      setActionSuggestions(null)
+      setTimelineEvents([])
       return
     }
     setMessageLoading(true)
-    void apiClient.listMessages({ conversationId: currentId }).then((result) => {
-      setMessages(result.messages)
-      setHasMore(result.hasMore)
-      setMessageLoading(false)
-    }).catch(() => {
-      setMessageLoading(false)
-      addToast(t('error.loadMessages'), 'error')
-    })
+    void apiClient
+      .listMessages({ conversationId: currentId })
+      .then((result) => {
+        setMessages(result.messages)
+        setHasMore(result.hasMore)
+        setMessageLoading(false)
+      })
+      .catch(() => {
+        setMessageLoading(false)
+        addToast(t('error.loadMessages'), 'error')
+      })
     void fetchAnalysis(currentId).catch(() => {
       addToast(t('error.loadAnalysis'), 'error')
     })
     setSuggestedReplies(mockClient.getSuggestedReplies(currentId))
-  }, [currentId, setMessages, setHasMore, setMessageLoading, fetchAnalysis, clearAnalysis, addToast, t])
+    void apiClient.getCustomerProfile(currentId).then(setCustomerProfile)
+    void apiClient.getIntentPrediction(currentId).then(setIntentPrediction)
+    void apiClient.getDealSuggestion(currentId).then(setDealSuggestion)
+    void apiClient.getActionSuggestions(currentId).then(setActionSuggestions)
+    void apiClient.getTimelineEvents(currentId).then(setTimelineEvents)
+  }, [
+    currentId,
+    setMessages,
+    setHasMore,
+    setMessageLoading,
+    fetchAnalysis,
+    clearAnalysis,
+    addToast,
+    t,
+  ])
 
   const handleSuggestedReplyClick = (text: string): void => {
     setInputText(text)
+  }
+
+  const handleActionExecute = (action: ActionSuggestionDTO['actions'][number]): void => {
+    addToast(`${action.label}`, 'success')
   }
 
   const currentConversation = conversations.find((c) => c.conversationId === currentId)
 
   const filteredConversations = conversations.filter((c) => {
     if (platformFilter && c.platform !== platformFilter) return false
-    if (chatTypeFilter !== 'all' && c.chatType !== chatTypeFilter) return false
-    if (activeFilterOn) {
-      if (c.lastMessageAtMs < Date.now() - ACTIVE_THRESHOLD_MS) return false
+    if (activeFilterOn && activeFilterRange !== 'all') {
+      const thresholdMs = RANGE_TO_MS[activeFilterRange] ?? ACTIVE_THRESHOLD_MS
+      if (c.lastMessageAtMs < Date.now() - thresholdMs) return false
     }
     if (selectedTagIds.length > 0) {
       if (!selectedTagIds.every((tagId) => c.tags?.includes(tagId))) return false
     }
+    if (personFilter && c.personId !== personFilter) return false
+    if (orgFilter && c.organizationId !== orgFilter) return false
     if (searchQuery.trim()) {
       const q = searchQuery.trim().toLowerCase()
       if (!c.customerDisplayName.toLowerCase().includes(q)) return false
     }
     return true
   })
+
+  const tags = useTagStore((s) => s.tags)
+  const activeFilterCount = [
+    activeFilterOn,
+    selectedTagIds.length > 0,
+    personFilter !== '',
+    orgFilter !== '',
+  ].filter(Boolean).length
+
+  const clearAllFilters = (): void => {
+    useConversationStore.getState().setActiveFilterRange('all')
+    useConversationStore.getState().setSelectedTags([])
+    setPersonFilter('')
+    setOrgFilter('')
+  }
 
   return (
     <div className="flex h-full flex-col overflow-hidden">
@@ -164,35 +234,85 @@ export function ConversationPage(): React.ReactElement {
 
       <div className="flex flex-1 gap-md overflow-hidden p-md">
         <aside className="hidden w-[300px] shrink-0 flex-col overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest shadow-soft md:flex">
-          <div className="flex items-center justify-between border-b border-surface-container-highest bg-surface-bright p-md">
-            <span className="text-[16px] font-semibold text-foreground">{t('workbench.title')}</span>
-          </div>
-
-          <div className="px-sm pt-sm pb-[6px]">
-            <div className="relative">
+          <div className="flex items-center gap-[6px] border-b border-surface-container-highest bg-surface-bright px-sm py-sm">
+            <div className="relative flex-1">
               <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder={t('workbench.searchPlaceholder')}
-                className="w-full rounded-lg border border-outline-variant bg-surface-container-low py-[7px] pl-8 pr-3 text-xs text-foreground outline-none transition-colors placeholder:text-muted-foreground/60 focus:border-primary focus:ring-1 focus:ring-primary-glow"
+                className="w-full rounded-lg border border-outline-variant bg-surface-container-low py-[6px] pl-8 pr-3 text-xs text-foreground outline-none transition-colors placeholder:text-muted-foreground/60 focus:border-primary focus:ring-1 focus:ring-primary-glow"
               />
             </div>
+            <FilterTrigger activeCount={activeFilterCount} onClick={() => setFilterPopoverOpen(!filterPopoverOpen)} />
           </div>
 
-          <div className="flex items-center gap-[6px] border-b border-surface-container-highest px-sm py-[10px]">
+          <div className="relative flex items-center gap-[6px] border-b border-surface-container-highest px-sm py-[8px]">
             <PlatformTabs value={platformFilter} onChange={setPlatformFilter} />
+            <FilterPopover
+              open={filterPopoverOpen}
+              onClose={() => setFilterPopoverOpen(false)}
+              persons={persons}
+              organizations={organizations}
+              personFilter={personFilter}
+              orgFilter={orgFilter}
+              onPersonFilterChange={setPersonFilter}
+              onOrgFilterChange={setOrgFilter}
+            />
           </div>
 
-          <div className="flex items-center gap-[6px] border-b border-surface-container-highest px-sm py-[10px]">
-            <ChatTypeTabs value={chatTypeFilter} onChange={setChatTypeFilter} />
-          </div>
-
-          <div className="relative">
-            <TagFilterBar onOpenTagPopover={() => setTagPopoverOpen(true)} />
-            <TagPopover open={tagPopoverOpen} onClose={() => setTagPopoverOpen(false)} />
-          </div>
+          {activeFilterCount > 0 && (
+            <div className="flex flex-wrap items-center gap-[4px] border-b border-surface-container-highest px-sm py-[6px]">
+              {activeFilterOn && (
+                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-[2px] text-[10px] font-medium text-emerald-700">
+                  {t(`filter.range${activeFilterRange.toUpperCase()}`)}
+                  <button type="button" onClick={() => useConversationStore.getState().setActiveFilterRange('all')} className="hover:text-emerald-900">
+                    <X className="h-2.5 w-2.5" />
+                  </button>
+                </span>
+              )}
+              {selectedTagIds.map((tagId) => {
+                const tag = tags.find((t) => t.tagId === tagId)
+                if (!tag) return null
+                return (
+                  <span
+                    key={tagId}
+                    className="inline-flex items-center gap-1 rounded-full px-2 py-[2px] text-[10px] font-medium"
+                    style={{ backgroundColor: `${tag.color}14`, color: tag.color }}
+                  >
+                    {tag.name}
+                    <button type="button" onClick={() => useConversationStore.getState().toggleTag(tagId)} className="hover:opacity-70">
+                      <X className="h-2.5 w-2.5" />
+                    </button>
+                  </span>
+                )
+              })}
+              {personFilter && (
+                <span className="inline-flex items-center gap-1 rounded-full bg-primary/8 px-2 py-[2px] text-[10px] font-medium text-primary">
+                  {persons.find((p) => p.personId === personFilter)?.name}
+                  <button type="button" onClick={() => setPersonFilter('')} className="hover:opacity-70">
+                    <X className="h-2.5 w-2.5" />
+                  </button>
+                </span>
+              )}
+              {orgFilter && (
+                <span className="inline-flex items-center gap-1 rounded-full bg-primary/8 px-2 py-[2px] text-[10px] font-medium text-primary">
+                  {organizations.find((o) => o.organizationId === orgFilter)?.name}
+                  <button type="button" onClick={() => setOrgFilter('')} className="hover:opacity-70">
+                    <X className="h-2.5 w-2.5" />
+                  </button>
+                </span>
+              )}
+              <button
+                type="button"
+                onClick={clearAllFilters}
+                className="ml-auto text-[10px] text-muted-foreground hover:text-foreground"
+              >
+                {t('common.cancel')}
+              </button>
+            </div>
+          )}
 
           <div className="custom-scrollbar flex-1 overflow-y-auto p-xs">
             {conversationLoading ? (
@@ -202,6 +322,8 @@ export function ConversationPage(): React.ReactElement {
                 conversations={filteredConversations}
                 currentId={currentId}
                 onSelect={switchConversation}
+                persons={persons}
+                organizations={organizations}
               />
             )}
           </div>
@@ -239,6 +361,12 @@ export function ConversationPage(): React.ReactElement {
             analysis={analysis}
             suggestedReplies={suggestedReplies}
             onSuggestedReplyClick={handleSuggestedReplyClick}
+            onActionExecute={handleActionExecute}
+            customerProfile={customerProfile}
+            intentPrediction={intentPrediction}
+            dealSuggestion={dealSuggestion}
+            actionSuggestions={actionSuggestions}
+            timelineEvents={timelineEvents}
           />
         </aside>
       </div>
