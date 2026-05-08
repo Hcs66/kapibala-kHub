@@ -116,8 +116,11 @@ export function ConversationPage(): React.ReactElement {
             <span className="text-[16px] font-semibold text-foreground">{t('workbench.title')}</span>
           </div>
 
-          <div className="flex flex-wrap items-center gap-[6px] border-b border-surface-container-highest px-sm py-[10px]">
+          <div className="flex items-center gap-[6px] border-b border-surface-container-highest px-sm py-[10px]">
             <PlatformTabs value={platformFilter} onChange={setPlatformFilter} />
+          </div>
+
+          <div className="flex items-center gap-[6px] border-b border-surface-container-highest px-sm py-[10px]">
             <ChatTypeTabs value={chatTypeFilter} onChange={setChatTypeFilter} />
           </div>
 
