@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next'
-import { User, Users } from 'lucide-react'
+import { MessageCircle, User, Users } from 'lucide-react'
 
 type ChatTypeFilter = 'all' | 'single' | 'group'
 
@@ -12,22 +12,22 @@ export function ChatTypeTabs({ value, onChange }: ChatTypeTabsProps): React.Reac
   const { t } = useTranslation()
 
   const tabs: Array<{ key: ChatTypeFilter; label: string; icon: React.ReactElement }> = [
-    { key: 'all', label: t('conversation.allTypes'), icon: <User className="h-3.5 w-3.5" /> },
+    { key: 'all', label: t('conversation.allTypes'), icon: <MessageCircle className="h-3.5 w-3.5" /> },
     { key: 'single', label: t('conversation.single'), icon: <User className="h-3.5 w-3.5" /> },
     { key: 'group', label: t('conversation.group'), icon: <Users className="h-3.5 w-3.5" /> },
   ]
 
   return (
-    <div className="flex border-b border-surface-container-highest">
+    <div className="flex items-center gap-xs border-b border-surface-container-highest px-sm py-[8px]">
       {tabs.map((tab) => (
         <button
           key={tab.key}
           type="button"
           onClick={() => onChange(tab.key)}
-          className={`flex flex-1 items-center justify-center gap-1 px-sm py-[8px] text-[11px] font-medium transition-colors ${
+          className={`flex items-center gap-1 rounded-full px-3 py-[5px] text-[11px] font-medium transition-colors ${
             value === tab.key
-              ? 'border-b-2 border-primary text-primary'
-              : 'text-on-surface-variant hover:bg-surface-container-low hover:text-foreground'
+              ? 'bg-primary text-white shadow-sm [&_svg]:text-white'
+              : 'bg-surface-container-low text-on-surface-variant hover:bg-surface-container hover:text-foreground'
           }`}
         >
           {tab.icon}
