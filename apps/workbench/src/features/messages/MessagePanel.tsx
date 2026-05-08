@@ -46,6 +46,7 @@ export function MessagePanel({
     getScrollElement: () => parentRef.current,
     estimateSize: () => 72,
     overscan: 5,
+    gap: 8,
   })
 
   const scrollToBottom = useCallback(() => {
@@ -73,13 +74,14 @@ export function MessagePanel({
     const diff = messages.length - prevMessageCountRef.current
     if (diff > 0 && hasScrolledInitially.current) {
       if (isAtBottom) {
+        virtualizer.measure()
         requestAnimationFrame(scrollToBottom)
       } else {
         setNewMessageCount((c) => c + diff)
       }
     }
     prevMessageCountRef.current = messages.length
-  }, [messages.length, isAtBottom, scrollToBottom])
+  }, [messages.length, isAtBottom, scrollToBottom, virtualizer])
 
   const handleScroll = useCallback(() => {
     const el = parentRef.current
@@ -206,12 +208,17 @@ export function MessagePanel({
                   left: 0,
                   width: '100%',
                   transform: `translateY(${String(virtualItem.start)}px)`,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: msg.direction === 'outbound' ? 'flex-end' : 'flex-start',
                 }}
               >
                 {shouldShowTimeSeparator(msg, prev) && (
-                  <TimeSeparator timestamp={msg.createdAtMs} />
+                  <div className="w-full">
+                    <TimeSeparator timestamp={msg.createdAtMs} />
+                  </div>
                 )}
-                <div className="animate-message-in">
+                <div className="animate-message-in max-w-[80%]">
                   <MessageBubble message={msg} showTranslation={showTranslation} onRetry={onRetry} />
                 </div>
               </div>

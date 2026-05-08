@@ -67,7 +67,7 @@ export function MessageBubble({ message, showTranslation, onRetry }: MessageBubb
   }
 
   return (
-    <div className={`flex gap-sm ${isOutbound ? 'flex-row-reverse self-end' : 'self-start'} max-w-[80%]`}>
+    <div className={`flex gap-sm ${isOutbound ? 'flex-row-reverse' : ''}`}>
       <MessageAvatar name={message.senderDisplayName} isOutbound={isOutbound} />
       <div className={`flex flex-col gap-1 ${isOutbound ? 'items-end' : 'items-start'}`}>
         <div

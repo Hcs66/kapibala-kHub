@@ -49,7 +49,6 @@ const MOCK_ANALYSIS_EVENT: ServerPushEvent = {
   payload: {
     conversationId: 'telegram::100001',
     summary: '客户对样品发货时间有明确需求，建议尽快提供物流方案。',
-    stage: '需求探询',
     trust: '中等',
     concern: '交付时效',
     nextAction: '提供样品发货时间表',

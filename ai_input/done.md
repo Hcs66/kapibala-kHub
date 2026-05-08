@@ -332,3 +332,117 @@ connector接 TG/WA 走 HTTP（与现有 Go:9800 风格一致）。
 - 更新AGENTS.md，将icon库使用信息写入
 
 ---
+
+
+继续优化：
+
+## 会话
+- 支持单聊和群聊分类
+- 支持对对话打标记(tag)，支持按tag筛选会话：
+ - 活跃会话作为一个独立的分类置顶，后面横向排列用户自定义的tag
+ - 有添加tag和显示所有tag操作，显示tag采用popup方式，支持搜索
+
+---
+根据现有的产品规划，帮我整理： 
+- 相关竞品研究 
+- 目前功能的完善程度 
+- 后续迭代建议
+
+--- 
+继续优化：
+
+- PlatformTabs改为胶囊样式
+
+---
+继续优化，根据gap分析文档，完成`P0（Demo 交付必须）`:
+
+- 销售工作台覆盖分析：docs/v1/workbench_gap_analysis.md
+
+---
+仔细阅读plan_next,给出后续迭代计划：
+
+## 说明
+- plan_next:docs/next/sales_workbench_plan_next.md
+- 先仔细阅读，看看其方向是否合适，有没有需要补充的
+
+---
+根据plan_next，实现ui mock：
+
+## 说明
+- plan_next: docs/next/sales_workbench_plan_next.md
+- 只实现ui，无需实现相关dto和api（但要预留对接位方便后续实现）
+- 升级当前会话侧边栏，包括：AI洞察、画像（person、所属公司）、时间线
+
+## AI洞察
+所有AI分析结论需要给出依据（若内容过多，可以显示图标作为查看依据入口）
+### 意图预测
+- 根据用户画像、关联线索、关联商机预测意图
+### 成交建议
+- 提供成交区间预测
+- 根据用户画像、关联线索、关联商机预测意图和提供的商品/公司上下文，提供销售商品建议（包括报价）
+### 动作建议
+- 根据意图推荐动作，如：报价、转化为线索、转化为商机、转单等
+
+## 画像
+- 包括person（客户）信息
+- 包括公司信息
+- 画像标签
+
+## 时间线
+时间线是客户根据的进度，包括：会话、线索、商机
+
+### 会话
+- 显示关联的会话
+
+### 线索
+- 显示关联的线索（如有）
+- 历史线索
+
+### 商机
+- 显示关联的商机（如有）
+- 历史商机
+
+---
+参考这份与gpt对话生成的迭代计划，生成一份独立的plan_next文档：
+
+## 说明
+- 参考的plan_next: docs/next/sales_workbench_plan_next.md
+- 文档开头带目录
+- 文档开头包括TLDR;
+- 尽量精简，不需要包括具体的数据库、方法、对象、接口实现，聚焦核心的产品定义、规划、结构、价值
+
+---
+
+优化UI/UX：
+
+## 信息面板（MessagePanel）
+- “我”发送的信息应该右侧对齐，现在是居中了
+- 新信息冒泡时，会出现信息重叠的情况
+
+---
+
+根据plan_next，实现ui mock：
+
+## 说明
+- plan_next: docs/next/plan_next.md
+- 只实现ui，无需实现相关dto和api（但要预留对接位方便后续实现）
+
+## 按person（客户）分组
+- 会话卡片显示所属person
+- 会话列表可以按person分类筛选
+
+## 按organization(公司)分组
+- 会话卡片显示所属organization
+- 会话列表可以按organization分类筛选
+
+## 全局搜索
+- 支持搜索person和organization
+
+---
+
+补充市场与竞品研究：
+
+## 说明
+- 将参考的plan_next(ai_input/resources/sales_workbench_plan_next.md)的`# 三、市场与竞品研究`部分补充到`sales_workbench_plan_next`(docs/next/sales_workbench_plan_next.md)
+
+---

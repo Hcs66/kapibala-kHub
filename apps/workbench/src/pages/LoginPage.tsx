@@ -38,7 +38,7 @@ export function LoginPage(): React.ReactElement {
           'radial-gradient(ellipse 80% 60% at 20% 50%, rgba(79, 70, 229, 0.08), transparent 60%), radial-gradient(ellipse 60% 80% at 80% 20%, rgba(99, 102, 241, 0.05), transparent 50%), var(--color-background)',
       }}
     >
-      <div className="relative z-10 w-full max-w-[36rem] rounded-xl border border-border bg-surface-container-lowest/80 p-10 shadow-[0_8px_40px_rgba(0,0,0,0.06)] backdrop-blur-xl">
+      <div className="relative z-10 w-full max-w-96 rounded-xl border border-border bg-surface-container-lowest/80 p-10 shadow-[0_8px_40px_rgba(0,0,0,0.06)] backdrop-blur-xl">
         <div className="mb-6 flex flex-col items-center gap-3">
           <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-primary shadow-[0_2px_8px_rgba(79,70,229,0.3)]">
             <Share2 className="h-5 w-5 text-primary-foreground" />
