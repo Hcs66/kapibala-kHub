@@ -25,7 +25,7 @@ export function PlatformTabs({ value, onChange }: PlatformTabsProps): React.Reac
           onClick={() => onChange(tab.key)}
           className={`flex items-center gap-1 rounded-full px-3 py-[5px] text-[11px] font-medium transition-colors ${
             value === tab.key
-              ? 'bg-primary text-on-primary shadow-sm'
+              ? 'bg-primary text-white shadow-sm [&_svg]:text-white'
               : 'bg-surface-container-low text-on-surface-variant hover:bg-surface-container hover:text-foreground'
           }`}
         >
