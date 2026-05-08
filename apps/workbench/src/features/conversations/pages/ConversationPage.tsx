@@ -1,10 +1,12 @@
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Search, WifiOff } from 'lucide-react'
 import { useConversationStore } from '@/stores/conversationStore'
 import { useTagStore } from '@/stores/tagStore'
 import { useMessageStore } from '@/stores/messageStore'
 import { useToastStore } from '@/stores/toastStore'
+import { useAccountStore } from '@/stores/accountStore'
+import { useAnalysisStore } from '@/stores/analysisStore'
 import { ConversationList } from '@/features/conversations/ConversationList'
 import { PlatformTabs } from '@/features/conversations/PlatformTabs'
 import { ChatTypeTabs } from '@/features/conversations/ChatTypeTabs'
@@ -17,7 +19,6 @@ import { AnalysisSidebar } from '@/features/analysis'
 import { AccountStatusBar } from '@/features/accounts'
 import { TranslatePreview } from '@/features/translate'
 import { apiClient, mockClient } from '@/shared/api'
-import type { AnalysisSummaryDTO, AccountStatusDTO } from '@/shared/api/types'
 import type { SuggestedReply } from '@/mocks/data'
 
 const ACTIVE_THRESHOLD_MS = 24 * 60 * 60 * 1000
@@ -47,9 +48,16 @@ export function ConversationPage(): React.ReactElement {
   const setHasMore = useMessageStore((s) => s.setHasMore)
   const setMessageLoading = useMessageStore((s) => s.setLoading)
 
-  const [analysis, setAnalysis] = useState<AnalysisSummaryDTO | null>(null)
+  const accounts = useAccountStore((s) => s.accounts)
+  const fetchAccounts = useAccountStore((s) => s.fetchAccounts)
+  const updateAccountStatus = useAccountStore((s) => s.updateAccountStatus)
+
+  const analysis = useAnalysisStore((s) => s.analysis)
+  const fetchAnalysis = useAnalysisStore((s) => s.fetchAnalysis)
+  const updateAnalysis = useAnalysisStore((s) => s.updateAnalysis)
+  const clearAnalysis = useAnalysisStore((s) => s.clear)
+
   const [platformFilter, setPlatformFilter] = useState<string>('')
-  const [accounts, setAccounts] = useState<AccountStatusDTO[]>([])
   const [suggestedReplies, setSuggestedReplies] = useState<SuggestedReply[]>([])
   const [tagPopoverOpen, setTagPopoverOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
@@ -66,20 +74,9 @@ export function ConversationPage(): React.ReactElement {
     }
   }, [])
 
-  const handleAccountStatusChanged = useCallback((account: AccountStatusDTO) => {
-    setAccounts((prev) =>
-      prev.map((a) => (a.accountId === account.accountId ? account : a)),
-    )
-  }, [])
+  const handleAccountStatusChanged = updateAccountStatus
 
-  const handleAnalysisUpdated = useCallback((updatedAnalysis: AnalysisSummaryDTO) => {
-    setAnalysis((prev) => {
-      if (prev && prev.conversationId === updatedAnalysis.conversationId) {
-        return updatedAnalysis
-      }
-      return prev
-    })
-  }, [])
+  const handleAnalysisUpdated = updateAnalysis
 
   const wsStatus = useWorkbenchWs({
     onAccountStatusChanged: handleAccountStatusChanged,
@@ -98,16 +95,16 @@ export function ConversationPage(): React.ReactElement {
       setConversationLoading(false)
       addToast(t('error.loadConversations'), 'error')
     })
-    void apiClient.listAccounts().then(setAccounts).catch(() => {
+    void fetchAccounts().catch(() => {
       addToast(t('error.loadAccounts'), 'error')
     })
     void fetchTags()
-  }, [setConversations, setConversationLoading, fetchTags, addToast, t])
+  }, [setConversations, setConversationLoading, fetchTags, fetchAccounts, addToast, t])
 
   useEffect(() => {
     if (!currentId) {
       setMessages([])
-      setAnalysis(null)
+      clearAnalysis()
       setSuggestedReplies([])
       return
     }
@@ -120,11 +117,11 @@ export function ConversationPage(): React.ReactElement {
       setMessageLoading(false)
       addToast(t('error.loadMessages'), 'error')
     })
-    void apiClient.getAnalysisSummary(currentId).then(setAnalysis).catch(() => {
+    void fetchAnalysis(currentId).catch(() => {
       addToast(t('error.loadAnalysis'), 'error')
     })
     setSuggestedReplies(mockClient.getSuggestedReplies(currentId))
-  }, [currentId, setMessages, setHasMore, setMessageLoading, addToast, t])
+  }, [currentId, setMessages, setHasMore, setMessageLoading, fetchAnalysis, clearAnalysis, addToast, t])
 
   const handleSuggestedReplyClick = (text: string): void => {
     setInputText(text)
