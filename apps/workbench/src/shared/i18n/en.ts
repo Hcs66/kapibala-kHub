@@ -91,6 +91,7 @@ export const en = {
     connecting: 'Connecting...',
     disconnected: 'Connection lost, reconnecting...',
     reconnecting: 'Reconnecting...',
+    offline: 'You are offline. Check your network connection.',
   },
   error: {
     loadConversations: 'Failed to load conversations',

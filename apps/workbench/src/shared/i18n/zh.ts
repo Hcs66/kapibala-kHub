@@ -91,6 +91,7 @@ export const zh = {
     connecting: '正在连接...',
     disconnected: '连接已断开，尝试重连中...',
     reconnecting: '重连中...',
+    offline: '网络已断开，请检查网络连接',
   },
   error: {
     loadConversations: '加载会话列表失败',

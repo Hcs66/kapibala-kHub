@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Search } from 'lucide-react'
+import { Search, WifiOff } from 'lucide-react'
 import { useConversationStore } from '@/stores/conversationStore'
 import { useTagStore } from '@/stores/tagStore'
 import { useMessageStore } from '@/stores/messageStore'
@@ -53,6 +53,18 @@ export function ConversationPage(): React.ReactElement {
   const [suggestedReplies, setSuggestedReplies] = useState<SuggestedReply[]>([])
   const [tagPopoverOpen, setTagPopoverOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
+  const [isOffline, setIsOffline] = useState(!navigator.onLine)
+
+  useEffect(() => {
+    const handleOnline = (): void => setIsOffline(false)
+    const handleOffline = (): void => setIsOffline(true)
+    window.addEventListener('online', handleOnline)
+    window.addEventListener('offline', handleOffline)
+    return () => {
+      window.removeEventListener('online', handleOnline)
+      window.removeEventListener('offline', handleOffline)
+    }
+  }, [])
 
   const handleAccountStatusChanged = useCallback((account: AccountStatusDTO) => {
     setAccounts((prev) =>
@@ -138,7 +150,13 @@ export function ConversationPage(): React.ReactElement {
 
   return (
     <div className="flex h-full flex-col overflow-hidden">
-      {wsStatus !== 'connected' && (
+      {isOffline && (
+        <div className="flex items-center justify-center gap-1.5 bg-amber-100 px-4 py-1.5 text-xs font-medium text-amber-900">
+          <WifiOff className="h-3.5 w-3.5" />
+          {t('ws.offline')}
+        </div>
+      )}
+      {!isOffline && wsStatus !== 'connected' && (
         <div className="flex items-center justify-center bg-error-container px-4 py-1.5 text-xs text-on-error-container">
           {wsStatus === 'connecting' && t('ws.connecting')}
           {wsStatus === 'disconnected' && t('ws.disconnected')}

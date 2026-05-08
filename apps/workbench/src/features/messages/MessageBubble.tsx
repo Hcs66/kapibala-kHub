@@ -85,6 +85,13 @@ export function MessageBubble({ message, showTranslation, onRetry }: MessageBubb
               {message.originalText}
             </p>
           )}
+          {message.imageUrl && (
+            <img
+              src={message.imageUrl}
+              alt=""
+              className="mb-1.5 max-h-[200px] max-w-[260px] rounded-lg object-cover"
+            />
+          )}
           <p className="whitespace-pre-wrap text-[14px]">{displayText}</p>
         </div>
         <div className={`flex items-center gap-xs px-2 ${isOutbound ? 'justify-end' : 'justify-start'}`}>
@@ -136,7 +143,12 @@ export function TimeSeparator({ timestamp }: TimeSeparatorProps): React.ReactEle
   } else if (isYesterday) {
     label = `${t('conversation.yesterday')} ${formatMessageTime(timestamp)}`
   } else {
-    label = `${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${formatMessageTime(timestamp)}`
+    const isThisYear = date.getFullYear() === now.getFullYear()
+    if (isThisYear) {
+      label = `${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${formatMessageTime(timestamp)}`
+    } else {
+      label = `${String(date.getFullYear())}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${formatMessageTime(timestamp)}`
+    }
   }
 
   return (

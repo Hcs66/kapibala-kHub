@@ -3,7 +3,9 @@ import { useConversationStore } from '@/stores/conversationStore'
 import { useMessageStore } from '@/stores/messageStore'
 import { createMockWs } from '@/shared/ws/mockWs'
 import type { ServerPushEvent, AccountStatusDTO, AnalysisSummaryDTO } from '@/shared/api/types'
-import type { WsConnectionStatus } from '@/shared/ws/client'
+import type { WsConnectionStatus, WorkbenchWs } from '@/shared/ws/client'
+
+const PING_INTERVAL_MS = 30_000
 
 function getWsOptions(): { simulateDisconnect?: boolean; disconnectAfterMs?: number; reconnectAfterMs?: number } {
   const params = new URLSearchParams(window.location.search)
@@ -25,13 +27,23 @@ export function useWorkbenchWs(callbacks?: WsEventCallbacks): WsConnectionStatus
   const updateMessageStatus = useMessageStore((s) => s.updateMessageStatus)
   const incrementUnread = useConversationStore((s) => s.incrementUnread)
 
-  const wsRef = useRef(createMockWs(getWsOptions()))
+  const wsRef = useRef<WorkbenchWs>(createMockWs(getWsOptions()))
   const [wsStatus, setWsStatus] = useState<WsConnectionStatus>('disconnected')
   const callbacksRef = useRef(callbacks)
   callbacksRef.current = callbacks
 
   const currentIdRef = useRef(currentId)
   currentIdRef.current = currentId
+
+  const prevCurrentIdRef = useRef<string | null>(null)
+
+  useEffect(() => {
+    const ws = wsRef.current
+    if (currentId && currentId !== prevCurrentIdRef.current) {
+      ws.send('read.ack', { conversationId: currentId })
+    }
+    prevCurrentIdRef.current = currentId
+  }, [currentId])
 
   const handleEvent = useCallback(
     (event: ServerPushEvent) => {
@@ -74,12 +86,26 @@ export function useWorkbenchWs(callbacks?: WsEventCallbacks): WsConnectionStatus
     const ws = wsRef.current
     ws.connect('mock_token')
 
-    const unsubStatus = ws.onStatusChange(setWsStatus)
+    const unsubStatus = ws.onStatusChange((newStatus) => {
+      setWsStatus((prev) => {
+        if (prev !== 'connected' && newStatus === 'connected' && prev === 'reconnecting') {
+          ws.send('sync.request', { since: Date.now() - 60_000 })
+        }
+        return newStatus
+      })
+    })
     const unsubEvent = ws.onEvent(handleEvent)
+
+    const pingInterval = setInterval(() => {
+      if (ws.getStatus() === 'connected') {
+        ws.send('ping', {})
+      }
+    }, PING_INTERVAL_MS)
 
     return () => {
       unsubStatus()
       unsubEvent()
+      clearInterval(pingInterval)
       ws.disconnect()
     }
   }, [handleEvent])

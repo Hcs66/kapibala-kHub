@@ -46,6 +46,7 @@ export interface MessageDTO {
   translatedText?: string
   language?: string
   status?: 'pending' | 'sent' | 'delivered' | 'read' | 'failed'
+  imageUrl?: string
   createdAtMs: number
 }
 
