@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next'
-import { Zap, List } from 'lucide-react'
+import { Zap, Settings } from 'lucide-react'
 import { useTagStore } from '@/stores/tagStore'
 import { useConversationStore } from '@/stores/conversationStore'
 
@@ -16,14 +16,14 @@ export function TagFilterBar({ onOpenTagPopover }: TagFilterBarProps): React.Rea
   const toggleTag = useConversationStore((s) => s.toggleTag)
 
   return (
-    <div className="flex items-center gap-xs overflow-x-auto border-b border-surface-container-highest px-sm py-[8px] scrollbar-none">
+    <div className="flex items-center gap-[6px] overflow-x-auto border-b border-surface-container-highest px-sm py-[8px] scrollbar-none">
       <button
         type="button"
         onClick={() => setActiveFilter(!activeFilterOn)}
-        className={`flex shrink-0 items-center gap-1 rounded-full px-3 py-1 text-[11px] font-medium transition-colors ${
+        className={`flex shrink-0 items-center gap-1 rounded-full px-2.5 py-[4px] text-[11px] font-medium transition-all ${
           activeFilterOn
-            ? 'bg-success/10 border border-success/30 text-success font-semibold'
-            : 'bg-surface-container-low text-on-surface-variant hover:bg-surface-container hover:text-foreground'
+            ? 'bg-emerald-500 text-white shadow-sm [&_svg]:text-white'
+            : 'border border-outline-variant/50 bg-surface-container-lowest text-on-surface-variant hover:border-primary/30 hover:text-foreground'
         }`}
       >
         <Zap className="h-3 w-3" />
@@ -37,18 +37,21 @@ export function TagFilterBar({ onOpenTagPopover }: TagFilterBarProps): React.Rea
             key={tag.tagId}
             type="button"
             onClick={() => toggleTag(tag.tagId)}
-            className={`flex shrink-0 items-center gap-1 rounded-full px-3 py-1 text-[11px] font-medium transition-colors ${
+            className={`flex shrink-0 items-center gap-1 rounded-full px-2.5 py-[4px] text-[11px] font-medium transition-all ${
               isSelected
-                ? 'bg-primary-fixed border border-primary/20 text-primary font-semibold'
-                : 'bg-surface-container-low text-on-surface-variant hover:bg-surface-container hover:text-foreground'
+                ? 'shadow-sm'
+                : 'border border-outline-variant/50 bg-surface-container-lowest text-on-surface-variant hover:border-primary/30 hover:text-foreground'
             }`}
+            style={
+              isSelected
+                ? { backgroundColor: `${tag.color}18`, color: tag.color, border: `1px solid ${tag.color}40` }
+                : undefined
+            }
           >
-            {tag.color && (
-              <span
-                className="inline-block h-2 w-2 rounded-full"
-                style={{ backgroundColor: tag.color }}
-              />
-            )}
+            <span
+              className="inline-block h-2 w-2 rounded-full"
+              style={{ backgroundColor: tag.color ?? '#94a3b8' }}
+            />
             <span>{tag.name}</span>
           </button>
         )
@@ -57,10 +60,10 @@ export function TagFilterBar({ onOpenTagPopover }: TagFilterBarProps): React.Rea
       <button
         type="button"
         onClick={onOpenTagPopover}
-        className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-on-surface-variant transition-colors hover:bg-surface-container-low hover:text-foreground"
+        className="flex h-[22px] w-[22px] shrink-0 items-center justify-center rounded-full border border-outline-variant/50 bg-surface-container-lowest text-on-surface-variant transition-colors hover:border-primary/30 hover:text-primary"
         title={t('conversation.manageTags')}
       >
-        <List className="h-3.5 w-3.5" />
+        <Settings className="h-3 w-3" />
       </button>
     </div>
   )
