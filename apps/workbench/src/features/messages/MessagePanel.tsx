@@ -44,18 +44,19 @@ export function MessagePanel({
   const virtualizer = useVirtualizer({
     count: messages.length,
     getScrollElement: () => parentRef.current,
-    estimateSize: () => 72,
+    getItemKey: (index) => messages[index]?.messageId ?? index,
+    estimateSize: () => 120,
     overscan: 5,
-    gap: 8,
+    gap: 12,
   })
 
   const scrollToBottom = useCallback(() => {
-    if (parentRef.current) {
-      parentRef.current.scrollTop = parentRef.current.scrollHeight
+    if (messages.length > 0) {
+      virtualizer.scrollToIndex(messages.length - 1, { align: 'end' })
       setIsAtBottom(true)
       setNewMessageCount(0)
     }
-  }, [])
+  }, [messages.length, virtualizer])
 
   useEffect(() => {
     if (messages.length === 0) {
@@ -200,26 +201,27 @@ export function MessagePanel({
             return (
               <div
                 key={msg.messageId}
-                data-index={virtualItem.index}
-                ref={virtualizer.measureElement}
                 style={{
                   position: 'absolute',
                   top: 0,
                   left: 0,
                   width: '100%',
                   transform: `translateY(${String(virtualItem.start)}px)`,
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: msg.direction === 'outbound' ? 'flex-end' : 'flex-start',
                 }}
               >
-                {shouldShowTimeSeparator(msg, prev) && (
-                  <div className="w-full">
-                    <TimeSeparator timestamp={msg.createdAtMs} />
+                <div
+                  data-index={virtualItem.index}
+                  ref={virtualizer.measureElement}
+                  className={`flex w-full flex-col gap-2 ${msg.direction === 'outbound' ? 'items-end' : 'items-start'}`}
+                >
+                  {shouldShowTimeSeparator(msg, prev) && (
+                    <div className="w-full">
+                      <TimeSeparator timestamp={msg.createdAtMs} />
+                    </div>
+                  )}
+                  <div className="max-w-[80%]">
+                    <MessageBubble message={msg} showTranslation={showTranslation} onRetry={onRetry} />
                   </div>
-                )}
-                <div className="animate-message-in max-w-[80%]">
-                  <MessageBubble message={msg} showTranslation={showTranslation} onRetry={onRetry} />
                 </div>
               </div>
             )

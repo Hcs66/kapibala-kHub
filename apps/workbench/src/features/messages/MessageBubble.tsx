@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Check, CheckCheck, X, Loader2, RotateCcw } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import type { MessageDTO } from '@/shared/api/types'
+import { ImagePreview } from '@/shared/ui/ImagePreview'
 
 interface MessageBubbleProps {
   message: MessageDTO
@@ -49,6 +50,7 @@ function MessageAvatar({ name, isOutbound }: { name: string; isOutbound: boolean
 export function MessageBubble({ message, showTranslation, onRetry }: MessageBubbleProps): React.ReactElement {
   const { t } = useTranslation()
   const [localShowTranslated, setLocalShowTranslated] = useState<boolean | null>(null)
+  const [previewOpen, setPreviewOpen] = useState(false)
   const isOutbound = message.direction === 'outbound'
   const hasTranslation = Boolean(message.translatedText)
 
@@ -89,7 +91,11 @@ export function MessageBubble({ message, showTranslation, onRetry }: MessageBubb
             <img
               src={message.imageUrl}
               alt=""
-              className="mb-1.5 max-h-[200px] max-w-[260px] rounded-lg object-cover"
+              className="mb-1.5 max-h-[200px] max-w-[260px] cursor-pointer rounded-lg object-cover transition-opacity hover:opacity-90"
+              onClick={(e) => {
+                e.stopPropagation()
+                setPreviewOpen(true)
+              }}
             />
           )}
           <p className="whitespace-pre-wrap text-[14px]">{displayText}</p>
@@ -120,6 +126,13 @@ export function MessageBubble({ message, showTranslation, onRetry }: MessageBubb
           )}
         </div>
       </div>
+      {message.imageUrl && (
+        <ImagePreview
+          src={message.imageUrl}
+          open={previewOpen}
+          onClose={() => setPreviewOpen(false)}
+        />
+      )}
     </div>
   )
 }
@@ -152,7 +165,7 @@ export function TimeSeparator({ timestamp }: TimeSeparatorProps): React.ReactEle
   }
 
   return (
-    <div className="my-2 flex justify-center">
+    <div className="flex justify-center py-2">
       <span className="rounded-full bg-surface-container-highest px-3 py-1 text-[10px] font-semibold tracking-wide text-on-surface-variant">
         {label}
       </span>

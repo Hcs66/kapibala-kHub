@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuthStore } from '@/stores/authStore'
 import { Mail, Lock, KeyRound, Shield, Share2 } from 'lucide-react'
@@ -9,6 +9,9 @@ export function LoginPage(): React.ReactElement {
   const { t } = useTranslation()
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
+  const [rememberMe, setRememberMe] = useState(
+    () => localStorage.getItem('workbench_remember_me') === 'true',
+  )
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const login = useAuthStore((s) => s.login)
@@ -21,7 +24,7 @@ export function LoginPage(): React.ReactElement {
 
     try {
       const result = await apiClient.login({ username, password })
-      login(result.token, result.user)
+      login(result.token, result.user, rememberMe)
       navigate('/workbench', { replace: true })
     } catch (err) {
       setError(t('auth.loginError'))
@@ -91,6 +94,19 @@ export function LoginPage(): React.ReactElement {
             </div>
           </div>
 
+          <div className="flex items-center gap-2">
+            <input
+              id="rememberMe"
+              type="checkbox"
+              checked={rememberMe}
+              onChange={(e) => setRememberMe(e.target.checked)}
+              className="h-4 w-4 rounded border-border text-primary focus:ring-primary-glow"
+            />
+            <label htmlFor="rememberMe" className="text-xs text-muted-foreground select-none cursor-pointer">
+              {t('auth.rememberMe')}
+            </label>
+          </div>
+
           {error && (
             <p className="rounded-md bg-error-container/40 px-3 py-2 text-xs font-medium text-destructive">
               {error}
@@ -119,6 +135,13 @@ export function LoginPage(): React.ReactElement {
             SSO {t('auth.login')}
           </button>
         </form>
+
+        <p className="mt-4 text-center text-xs text-muted-foreground">
+          {t('auth.noAccount')}{' '}
+          <Link to="/register" className="text-primary hover:text-primary-dim transition-colors font-medium">
+            {t('auth.register')}
+          </Link>
+        </p>
       </div>
 
       <div className="absolute bottom-6 flex items-center gap-1.5 text-xs text-muted-foreground/70">

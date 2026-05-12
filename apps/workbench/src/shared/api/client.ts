@@ -1,6 +1,8 @@
 import type {
   LoginRequest,
   LoginResult,
+  RegisterRequest,
+  RegisterResult,
   ConversationListQuery,
   ConversationListResult,
   MessageHistoryQuery,
@@ -23,9 +25,11 @@ import type {
   GlobalSearchQuery,
   GlobalSearchResult,
 } from './types'
+import type { DashboardSummaryDTO, MetricPeriod } from '@/features/dashboard/types'
 
 export interface WorkbenchApi {
   login(input: LoginRequest): Promise<LoginResult>
+  register(input: RegisterRequest): Promise<RegisterResult>
   getCurrentUser(): Promise<CurrentUserDTO>
   listConversations(input: ConversationListQuery): Promise<ConversationListResult>
   listMessages(input: MessageHistoryQuery): Promise<MessageHistoryResult>
@@ -46,6 +50,7 @@ export interface WorkbenchApi {
   listPersons(): Promise<PersonDTO[]>
   listOrganizations(): Promise<OrganizationDTO[]>
   globalSearch(input: GlobalSearchQuery): Promise<GlobalSearchResult>
+  getDashboardSummary(period: MetricPeriod): Promise<DashboardSummaryDTO>
 }
 
 export type { WorkbenchApi as default }

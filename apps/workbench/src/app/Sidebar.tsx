@@ -83,7 +83,7 @@ export function Sidebar(): React.ReactElement {
       }`}
     >
       <div
-        className={`flex items-center gap-sm border-b border-sidebar-border p-md ${collapsed ? 'justify-center' : ''}`}
+        className={`flex items-center gap-sm border-b border-sidebar-border px-md h-[56px] ${collapsed ? 'justify-center' : ''}`}
       >
         <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground">
           <span className="text-sm font-bold">K</span>

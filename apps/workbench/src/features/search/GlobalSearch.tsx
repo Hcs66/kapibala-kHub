@@ -74,7 +74,7 @@ export function GlobalSearch({ onSelectConversation, onSelectPerson, onSelectOrg
   const showDropdown = open && query.trim().length > 0
 
   return (
-    <div ref={containerRef} className="relative flex max-w-[480px] flex-1 items-center justify-center px-lg">
+    <div ref={containerRef} className="relative flex max-w-[480px] flex-1 items-center justify-center">
       <div className="flex w-full items-center gap-2 rounded-lg border border-outline-variant bg-surface-container-low px-sm py-[7px] transition-all focus-within:border-primary focus-within:ring-2 focus-within:ring-primary-glow">
         <Search className="h-4 w-4 shrink-0 text-outline-variant" />
         <input

@@ -2,6 +2,8 @@ import type { WorkbenchApi } from './client'
 import type {
   LoginRequest,
   LoginResult,
+  RegisterRequest,
+  RegisterResult,
   ConversationListQuery,
   ConversationListResult,
   MessageHistoryQuery,
@@ -24,7 +26,9 @@ import type {
   GlobalSearchQuery,
   GlobalSearchResult,
 } from './types'
+import type { DashboardSummaryDTO, MetricPeriod } from '@/features/dashboard/types'
 import { mockConversations, mockMessages, mockAccounts, mockAccountsDisconnected, mockAnalysis, mockHistoryMessages, mockSuggestedReplies, mockTags, mockCustomerProfiles, mockIntentPredictions, mockDealSuggestions, mockActionSuggestions, mockTimelineEvents, mockPersons, mockOrganizations } from '@/mocks/data'
+import { mockDashboardSummary } from '@/mocks/data/dashboard'
 import type { SuggestedReply, MockScenario } from '@/mocks/data'
 
 function delay(ms: number): Promise<void> {
@@ -58,6 +62,25 @@ export const mockClient: MockClientExtended = {
       }
     }
     throw new Error('用户名或密码错误')
+  },
+
+  async register(input: RegisterRequest): Promise<RegisterResult> {
+    await delay(600)
+    if (input.username === 'sales') {
+      throw new Error('用户名已存在')
+    }
+    return {
+      token: `mock_jwt_token_${input.username}_${Date.now()}`,
+      user: {
+        tenantId: 'tenant_001',
+        userId: `user_${input.username}_${Date.now()}`,
+        username: input.username,
+        displayName: input.displayName,
+        role: 'sales',
+        teamIds: ['team_001'],
+        capabilities: ['message.send', 'message.read'],
+      },
+    }
   },
 
   async getCurrentUser(): Promise<CurrentUserDTO> {
@@ -96,7 +119,12 @@ export const mockClient: MockClientExtended = {
     }
     if (input.search) {
       const q = input.search.toLowerCase()
-      filtered = filtered.filter((c) => c.customerDisplayName.toLowerCase().includes(q))
+      filtered = filtered.filter((c) =>
+        c.customerDisplayName.toLowerCase().includes(q) ||
+        c.lastMessageText.toLowerCase().includes(q) ||
+        c.platform.toLowerCase().includes(q) ||
+        c.accountDisplayName.toLowerCase().includes(q),
+      )
     }
 
     return {
@@ -280,5 +308,10 @@ export const mockClient: MockClientExtended = {
       .slice(0, limit)
 
     return { persons, organizations, conversations }
+  },
+
+  async getDashboardSummary(_period: MetricPeriod): Promise<DashboardSummaryDTO> {
+    await delay(400)
+    return { ...mockDashboardSummary }
   },
 }

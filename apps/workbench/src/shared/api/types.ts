@@ -98,6 +98,17 @@ export interface LoginResult {
   user: CurrentUserDTO
 }
 
+export interface RegisterRequest {
+  username: string
+  password: string
+  displayName: string
+}
+
+export interface RegisterResult {
+  token: string
+  user: CurrentUserDTO
+}
+
 export interface ConversationListQuery {
   page?: number
   limit?: number

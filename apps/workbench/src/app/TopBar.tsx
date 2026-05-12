@@ -1,16 +1,39 @@
 import { useTranslation } from 'react-i18next'
-import { Bell, Settings, User, Globe } from 'lucide-react'
+import { useNavigate, useLocation } from 'react-router-dom'
+import { Bell, Settings, Globe } from 'lucide-react'
 import { changeLanguage } from '@/shared/i18n'
+import { useConversationStore } from '@/stores/conversationStore'
 import { GlobalSearch } from '@/features/search'
+import { UserMenu } from './UserMenu'
 
 export function TopBar(): React.ReactElement {
   const { t, i18n } = useTranslation()
+  const navigate = useNavigate()
+  const location = useLocation()
+  const switchConversation = useConversationStore((s) => s.switchConversation)
+
+  const handleSelectConversation = (conversationId: string): void => {
+    switchConversation(conversationId)
+    if (location.pathname !== '/workbench') {
+      navigate('/workbench')
+    }
+  }
+
+  const handleSelectPerson = (personId: string): void => {
+    navigate(`/persons?highlight=${personId}`)
+  }
+
+  const handleSelectOrganization = (organizationId: string): void => {
+    navigate(`/organizations?highlight=${organizationId}`)
+  }
 
   return (
     <header className="flex h-[56px] shrink-0 items-center justify-between border-b border-sidebar-border bg-surface-container-lowest px-lg">
-      <span className="text-lg font-semibold text-primary">{t('layout.appName')} Workbench</span>
-
-      <GlobalSearch />
+      <GlobalSearch
+        onSelectConversation={handleSelectConversation}
+        onSelectPerson={handleSelectPerson}
+        onSelectOrganization={handleSelectOrganization}
+      />
 
       <div className="flex items-center gap-xs">
         <button
@@ -35,13 +58,7 @@ export function TopBar(): React.ReactElement {
         >
           <Settings className="h-5 w-5" />
         </button>
-        <button
-          type="button"
-          title={t('layout.topbar.profile')}
-          className="ml-xs flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground"
-        >
-          <User className="h-4 w-4" />
-        </button>
+        <UserMenu />
       </div>
     </header>
   )

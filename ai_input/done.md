@@ -446,3 +446,58 @@ connector接 TG/WA 走 HTTP（与现有 Go:9800 风格一致）。
 - 将参考的plan_next(ai_input/resources/sales_workbench_plan_next.md)的`# 三、市场与竞品研究`部分补充到`sales_workbench_plan_next`(docs/next/sales_workbench_plan_next.md)
 
 ---
+完善 accounts feature:
+
+## 说明
+- 将登录相关功能整合进accounts
+- 增加注册功能
+- 登录页增加“30天内记住密码“选项，若登录时勾选则保留登录凭证到本地，下次打开页面直接免登（若退出登录清除凭证）
+
+---
+更新文档：
+
+## 说明
+目前已实现的功能已超过当初规划的demo范围，部分功能已实现ui mock，请先于阅读plan_next(docs/next/sales_workbench_plan_next.md)和demo_plan(docs/v1/workbench_demo_plan.md)，根据实际已完成部分更新以下文档：
+- demo_plan: docs/v1/workbench_demo_plan.md
+- mock_to_real: docs/v1/workbench_mock_to_real.md
+- workbench_onsite_questions: docs/v1/workbench_onsite_questions.md
+
+---
+请根据最新的sales_memory（ai_input/resources/docs/sales_memory.md）文档，更新plan_next(docs/next/sales_workbench_plan_next.md)相关内容
+
+---
+优化搜索功能：
+
+## 说明
+- 搜索结果不能跳转到对应信息，比如会话不能跳转
+
+---
+优化UI/UX
+
+## 说明
+- 请查看截图：ai_input/resources/feedback/message_overlap.png
+- 信息堆叠在一起了
+
+---
+基于plan_next, 生成工作台（dashboard）模块：
+
+## 说明
+- 先阅读plan：docs/next/sales_workbench_plan_next.md
+- 先设计plan待我评估再开发，plan包括dashboard需要包含的模块，ui建议
+
+---
+
+修复搜索功能：
+
+## 说明
+- 会话列表页面（ConversationPage）左侧顶部的搜索无法搜索结果
+
+--
+先用 mock 数据搭建完整 UI，验证布局和交互
+
+1. 固定布局
+2. mock
+3. 两者都有
+4. 支持切换
+
+---

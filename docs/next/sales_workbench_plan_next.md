@@ -18,7 +18,7 @@
 
 ## TL;DR
 
-kHub 的本质定位是 **Conversation-first Sales OS**——以会话驱动销售动作、决策与增长。当前处于 L1.5（Unified Inbox）阶段，核心差距在于缺少业务闭环（Workflow / Ownership / Task Queue / Pipeline）。下一阶段（V1.5）的首要目标是**把 Conversation 变成 Action**，通过引入 Lead Graph、Task Engine、Next Action 机制，将消息基础设施升级为真正的销售工作台。长期护城河是 Lead Graph + Sales Memory + Playbook Engine。
+kHub 的本质定位是 **Conversation-first Sales OS**——以会话驱动销售动作、决策与增长。当前处于 L1.5（Unified Inbox）阶段，核心差距在于缺少业务闭环（Workflow / Ownership / Task Queue / Pipeline）。下一阶段（V1.5）的首要目标是**把 Conversation 变成 Action**，通过引入 Lead Graph、Task Engine、Next Action 机制，将消息基础设施升级为真正的销售工作台。同时引入 **Sales Memory（组织销售记忆）** 作为全系统共享认知层，将系统从 Record System 升级为 Learning System。长期护城河是 **Lead Graph + Sales Memory + Playbook Engine**。
 
 ---
 
@@ -237,9 +237,108 @@ Identity (渠道身份, N:1 Person)
 
 ## 八、产品护城河
 
-1. **Lead Graph** — 客户关系图谱，跨渠道识别 + 组织穿透 + 机会评分
-2. **Sales Memory** — 长期记忆（历史价格、objections、competitor、decision maker）
-3. **Playbook Engine** — 规则驱动的自动化销售流程
+1. **Lead Graph** — 客户关系图谱，跨渠道识别 + 组织穿透 + 机会评分（客户关系资产）
+2. **Sales Memory** — 组织级长期销售记忆系统（组织经验资产）
+3. **Playbook Engine** — 规则驱动的自动化销售流程（组织执行资产）
+
+三者结合形成 **Sales Operating System Core**：
+
+```
+Graph + Memory + Playbook = Sales OS Core
+```
+
+### Sales Memory 详述
+
+#### 定位
+
+Sales Memory 是 **Organizational Intelligence Layer（组织智能层）**，在系统中充当 **Cognitive Backbone（认知主干）**。
+
+它不是 CRM Object、Workflow Object 或 Document Base，而是**全系统共享上下文层**，横跨 Lead Graph、Opportunity、Next Action、Task Queue、Playbook Engine。
+
+#### 解决的核心问题
+
+> "组织过去学到了什么，并如何影响未来成交？"
+
+具体场景：销售离职、客户联系人更换、商机中断、经验流失、SOP 无法沉淀 → **组织记忆不丢失**。
+
+#### 系统层级
+
+```
+                       Sales Memory
+                              │
+         ┌────────────────────┴────────────────────┐
+         ▼                                         ▼
+    Lead Graph                              Playbook Engine
+         │                                         │
+         ▼                                         ▼
+    Opportunity Layer                       Next Action Engine
+         │                                         │
+         ▼                                         ▼
+    Messages / Tasks / Quotes / Timeline    Task Queue
+```
+
+核心关系：**Events → Memory → Intelligence → Action**
+
+#### 数据来源（双源）
+
+| 来源 | 说明 | 示例 |
+|------|------|------|
+| **Human Memory** | 销售/运营/管理者主动录入 | sales notes、playbook、product FAQ、objection handling、pricing strategy、SOP |
+| **Agent Memory** | Agent 自动沉淀 | 从 message/task/meeting/quote/won/lost/timeline 中提炼 |
+
+数据结构：
+
+```
+memory_entry: id, memory_type, scope_type, scope_id, content, author_id, source(human|agent), created_at, updated_at
+```
+
+#### Memory Scope（六层作用域）
+
+| Scope | 说明 | 示例 |
+|-------|------|------|
+| Organization | 公司级 | 平均成交周期：28 天 |
+| Market | 市场级 | Mexico 更偏 WhatsApp |
+| Product | 产品级 | SKU-A 最常 objection 是 delivery |
+| Account | 客户级 | ABC Corp 采购周期在 Q3 |
+| Opportunity | 商机级 | Deal #001 已有 CEO 参与 |
+| Person | 联系人级 | John 喜欢语音沟通 |
+
+#### Memory 类型（五类）
+
+| 类型 | 定义 | 示例 |
+|------|------|------|
+| Declarative | 可验证事实 | ABC uses Net30 |
+| Procedural | 可复用动作经验 | 如果客户问 MOQ，先发案例 |
+| Strategic | 市场打法 | 德国客户优先推 Premium |
+| Competitive | 竞争经验 | XYZ 经常压价 |
+| Risk | 风险模式 | John 经常 ghosting |
+
+#### Memory 生成 Pipeline（三层）
+
+```
+Layer 1: Event Capture     → message / task / quote / meeting / won / lost / timeline
+Layer 2: Memory Extraction → Agent 自动提炼（如"客户连续三次提 delivery" → "delivery sensitive"）
+Layer 3: Memory Consolidation → 自动合并（shipping sensitive + delivery concern + freight concern → logistics sensitive）
+```
+
+原则：**从事件 → 经验**
+
+#### 与其它模块关系
+
+| 模块 | 作用 | 示例 |
+|------|------|------|
+| Lead Graph | Enrich Graph | John → price sensitive |
+| Opportunity | Enrich Stage | 类似客户通常需要 2 次 Demo |
+| Next Action | Memory 是决策输入 | ABC hates long proposals → 建议发 short quote |
+| Task Queue | Memory 影响 priority | High churn risk → priority ↑ |
+| Playbook Engine | Memory 生成规则 | Demo 后 3 天 followup 成交率 +18% → 自动形成 Playbook |
+
+#### UI 建议
+
+在客户页和商机页增加 **Memory Panel**：
+
+- Customer Memory：MOQ Sensitive、Decision Maker、Preferred Channel、Budget Cycle、Competitor 等
+- Suggested Tactics：基于相似成交案例推荐策略（如 Use Short Quote、Followup within 48h、Include Shipping Plan）
 
 ---
 
@@ -248,9 +347,9 @@ Identity (渠道身份, N:1 Person)
 | 版本 | 定位 | 核心新增 |
 |------|------|----------|
 | **V1（当前）** | Unified Inbox | Connector、Translation、Replay、Search、Summary |
-| **V1.5** | Sales Workbench | Ownership、Task Engine、Next Action、Task Queue、Lead Graph P1 |
-| **V2** | Revenue OS | Opportunity、Quotes、Meetings、Pipeline、CRM Sync、LLM Reasoning |
-| **V3** | Autonomous Sales Agent | Relationship Graph、Learning Model、Playbook Optimization、Autonomous Execution |
+| **V1.5** | Sales Workbench | Ownership、Task Engine、Next Action、Task Queue、Lead Graph P1、**Sales Memory P1**（Manual Memory + AI Summary Memory + Retrieval） |
+| **V2** | Revenue OS | Opportunity、Quotes、Meetings、Pipeline、CRM Sync、LLM Reasoning、**Sales Memory P2**（Objection/Competitor/Pricing Extraction + Memory Search） |
+| **V3** | Autonomous Sales Agent | Relationship Graph、Learning Model、Playbook Optimization、Autonomous Execution、**Memory-driven Agent**（按历史打法自动处理客户） |
 
 ---
 
@@ -263,6 +362,7 @@ Identity (渠道身份, N:1 Person)
 - Next Action（AI 推荐下一步）
 - Task Queue（优先级队列）
 - Lead Graph Phase 1（基础关系图谱）
+- **Sales Memory Phase 1**（Manual Memory + AI Summary Memory + Retrieval）
 
 ### P1（建议）
 
@@ -270,9 +370,12 @@ Identity (渠道身份, N:1 Person)
 - Template Engine
 - Timeline
 - Stage Detection
+- **Memory Panel UI**（客户页/商机页 Memory 展示 + Suggested Tactics）
 
 ### P2（后续）
 
 - Pipeline
 - CRM Sync
 - Agent Autonomous Execution
+- **Sales Memory Phase 2**（Objection/Competitor/Pricing Extraction + Memory Search）
+- **Memory-driven Agent**（V3）

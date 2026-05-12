@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Search, WifiOff, X } from 'lucide-react'
 import { useConversationStore } from '@/stores/conversationStore'
@@ -19,6 +19,7 @@ import { TranslatePreview } from '@/features/translate'
 import { apiClient, mockClient } from '@/shared/api'
 import type { SuggestedReply } from '@/mocks/data'
 import type {
+  ConversationDTO,
   CustomerProfileDTO,
   IntentPredictionDTO,
   DealSuggestionDTO,
@@ -74,6 +75,9 @@ export function ConversationPage(): React.ReactElement {
   const [suggestedReplies, setSuggestedReplies] = useState<SuggestedReply[]>([])
   const [filterPopoverOpen, setFilterPopoverOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
+  const [searchResults, setSearchResults] = useState<ConversationDTO[] | null>(null)
+  const [searchLoading, setSearchLoading] = useState(false)
+  const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [isOffline, setIsOffline] = useState(!navigator.onLine)
   const [customerProfile, setCustomerProfile] = useState<CustomerProfileDTO | null>(null)
   const [intentPrediction, setIntentPrediction] = useState<IntentPredictionDTO | null>(null)
@@ -98,6 +102,26 @@ export function ConversationPage(): React.ReactElement {
   const handleAccountStatusChanged = updateAccountStatus
 
   const handleAnalysisUpdated = updateAnalysis
+
+  const handleSearchChange = useCallback((value: string) => {
+    setSearchQuery(value)
+    if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current)
+    if (!value.trim()) {
+      setSearchResults(null)
+      setSearchLoading(false)
+      return
+    }
+    setSearchLoading(true)
+    searchDebounceRef.current = setTimeout(() => {
+      void apiClient.listConversations({ search: value.trim() }).then((result) => {
+        setSearchResults(result.conversations)
+        setSearchLoading(false)
+      }).catch(() => {
+        setSearchResults(null)
+        setSearchLoading(false)
+      })
+    }, 300)
+  }, [])
 
   const wsStatus = useWorkbenchWs({
     onAccountStatusChanged: handleAccountStatusChanged,
@@ -193,12 +217,10 @@ export function ConversationPage(): React.ReactElement {
     }
     if (personFilter && c.personId !== personFilter) return false
     if (orgFilter && c.organizationId !== orgFilter) return false
-    if (searchQuery.trim()) {
-      const q = searchQuery.trim().toLowerCase()
-      if (!c.customerDisplayName.toLowerCase().includes(q)) return false
-    }
     return true
   })
+
+  const displayedConversations: ConversationDTO[] = searchResults ?? filteredConversations
 
   const tags = useTagStore((s) => s.tags)
   const activeFilterCount = [
@@ -240,10 +262,19 @@ export function ConversationPage(): React.ReactElement {
               <input
                 type="text"
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => handleSearchChange(e.target.value)}
                 placeholder={t('workbench.searchPlaceholder')}
-                className="w-full rounded-lg border border-outline-variant bg-surface-container-low py-[6px] pl-8 pr-3 text-xs text-foreground outline-none transition-colors placeholder:text-muted-foreground/60 focus:border-primary focus:ring-1 focus:ring-primary-glow"
+                className="w-full rounded-lg border border-outline-variant bg-surface-container-low py-[6px] pl-8 pr-8 text-xs text-foreground outline-none transition-colors placeholder:text-muted-foreground/60 focus:border-primary focus:ring-1 focus:ring-primary-glow"
               />
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => handleSearchChange('')}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded p-0.5 text-muted-foreground hover:text-foreground"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              )}
             </div>
             <FilterTrigger activeCount={activeFilterCount} onClick={() => setFilterPopoverOpen(!filterPopoverOpen)} />
           </div>
@@ -315,11 +346,11 @@ export function ConversationPage(): React.ReactElement {
           )}
 
           <div className="custom-scrollbar flex-1 overflow-y-auto p-xs">
-            {conversationLoading ? (
+            {conversationLoading || searchLoading ? (
               <ConversationSkeleton count={6} />
             ) : (
               <ConversationList
-                conversations={filteredConversations}
+                conversations={displayedConversations}
                 currentId={currentId}
                 onSelect={switchConversation}
                 persons={persons}
